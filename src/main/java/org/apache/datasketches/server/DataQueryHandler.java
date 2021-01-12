@@ -44,23 +44,23 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * Full description to be added later.
  */
 public class DataQueryHandler extends BaseSketchesQueryHandler {
-  public DataQueryHandler(SketchStorage sketches) {
+  public DataQueryHandler(final SketchStorage sketches) {
     super(sketches, false);
   }
 
   @Override
-  protected JsonObject processQuery(JsonObject query) {
+  protected JsonObject processQuery(final JsonObject query) {
     if (!query.has(QUERY_NAME_FIELD)) {
       throw new IllegalArgumentException("Query missing sketch name field");
     }
 
-    String key = query.get(QUERY_NAME_FIELD).getAsString();
+    final String key = query.get(QUERY_NAME_FIELD).getAsString();
     if (!sketches.contains(key)) {
       throw new IllegalArgumentException("Invalid sketch name: " + key);
     }
 
-    SketchStorage.SketchEntry se = sketches.getSketch(key);
-    JsonObject result;
+    final SketchStorage.SketchEntry se = sketches.getSketch(key);
+    final JsonObject result;
 
     switch (se.family) {
       case UNION:
@@ -89,7 +89,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     return result;
   }
 
-  private boolean checkSummaryFlag(JsonObject query) {
+  private static boolean checkSummaryFlag(final JsonObject query) {
     boolean addSummary = false;
     if (query != null && query.has(QUERY_SUMMARY_FIELD)) {
       addSummary = query.get(QUERY_SUMMARY_FIELD).getAsBoolean();
@@ -97,27 +97,27 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     return addSummary;
   }
 
-  private JsonObject processDistinctQuery(JsonObject query, Family type, Object sketch) {
+  private static JsonObject processDistinctQuery(final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
 
     // check if we need a summary
-    boolean addSummary = checkSummaryFlag(query);
+    final boolean addSummary = checkSummaryFlag(query);
     String summary = null;
 
-    double estimate;
-    boolean isEstimationMode;
-    double p1StdDev;
-    double p2StdDev;
-    double p3StdDev;
-    double m1StdDev;
-    double m2StdDev;
-    double m3StdDev;
+    final double estimate;
+    final boolean isEstimationMode;
+    final double p1StdDev;
+    final double p2StdDev;
+    final double p3StdDev;
+    final double m1StdDev;
+    final double m2StdDev;
+    final double m3StdDev;
 
     switch (type) {
       case UNION:
-        CompactSketch thetaSketch = ((Union) sketch).getResult();
+        final CompactSketch thetaSketch = ((Union) sketch).getResult();
         isEstimationMode = thetaSketch.isEstimationMode();
         estimate = thetaSketch.getEstimate();
         p1StdDev = thetaSketch.getUpperBound(1);
@@ -130,7 +130,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       case CPC:
-        CpcSketch cpcSketch = (CpcSketch) sketch;
+        final CpcSketch cpcSketch = (CpcSketch) sketch;
         isEstimationMode = true; // no exact mode
         estimate = cpcSketch.getEstimate();
         p1StdDev = cpcSketch.getUpperBound(1);
@@ -143,7 +143,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       case HLL:
-        HllSketch hllSketch = (HllSketch) sketch;
+        final HllSketch hllSketch = (HllSketch) sketch;
         isEstimationMode = hllSketch.isEstimationMode();
         estimate = hllSketch.getEstimate();
         p1StdDev = hllSketch.getUpperBound(1);
@@ -159,7 +159,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         throw new IllegalArgumentException("Unknown distinct counting sketch type: " + type.toString());
     }
 
-    JsonObject result = new JsonObject();
+    final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_ESTIMATE_FIELD, estimate);
     result.addProperty(RESPONSE_ESTIMATION_MODE_FIELD, isEstimationMode);
     result.addProperty(RESPONSE_P1STDEV_FIELD, p1StdDev);
@@ -174,31 +174,31 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     return result;
   }
 
-  private JsonObject processQuantilesQuery(JsonObject query, Family type, Object sketch) {
+  private static JsonObject processQuantilesQuery(final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
 
     // check if we need a summary
-    boolean addSummary = checkSummaryFlag(query);
+    final boolean addSummary = checkSummaryFlag(query);
     String summary = null;
 
-    boolean isEstimationMode;
-    float maxValue;
-    float minValue;
-    long streamLength;
+    final boolean isEstimationMode;
+    final float maxValue;
+    final float minValue;
+    final long streamLength;
 
-    double[] fractions = getFractionsArray(query);
+    final double[] fractions = getFractionsArray(query);
     float[] quantiles = null;
 
-    float[] values = getValuesArray(query);
-    String resultType = getResultType(query);
+    final float[] values = getValuesArray(query);
+    final String resultType = getResultType(query);
     double[] ranks = null;
 
     // since we know REQ is coming
     switch (type) {
       case KLL:
-        KllFloatsSketch kll = (KllFloatsSketch) sketch;
+        final KllFloatsSketch kll = (KllFloatsSketch) sketch;
         isEstimationMode = kll.isEstimationMode();
         maxValue = kll.getMaxValue();
         minValue = kll.getMinValue();
@@ -220,7 +220,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         throw new SketchesException("processQuantilesQuery() received a non-quantiles sketch: " + type.toString());
     }
 
-    JsonObject result = new JsonObject();
+    final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_STREAM_LENGTH, streamLength);
     result.addProperty(RESPONSE_ESTIMATION_MODE_FIELD, isEstimationMode);
     result.addProperty(RESPONSE_MIN_VALUE, minValue);
@@ -228,9 +228,9 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
 
     if (ranks != null) {
       final String label = resultType.equals(QUERY_RESULT_TYPE_PMF) ? RESPONSE_RESULT_MASS : RESPONSE_RESULT_RANK;
-      JsonArray rankArray = new JsonArray();
+      final JsonArray rankArray = new JsonArray();
       for (int i = 0; i < ranks.length; ++i) {
-        JsonObject rankPair = new JsonObject();
+        final JsonObject rankPair = new JsonObject();
         if (i == values.length) {
           rankPair.addProperty(RESPONSE_RESULT_VALUE, maxValue);
         } else {
@@ -247,9 +247,9 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     }
 
     if (quantiles != null) {
-      JsonArray quantileArray = new JsonArray();
+      final JsonArray quantileArray = new JsonArray();
       for (int i = 0; i < quantiles.length; ++i) {
-        JsonObject quantilePair = new JsonObject();
+        final JsonObject quantilePair = new JsonObject();
         quantilePair.addProperty(RESPONSE_RESULT_RANK, fractions[i]);
         quantilePair.addProperty(RESPONSE_RESULT_QUANTILE, quantiles[i]);
         quantileArray.add(quantilePair);
@@ -266,23 +266,23 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   // only one sketch type here so could use ItemsSketch<String> instead of Object, but
   // we'll eep the signatures generic here
   @SuppressWarnings("unchecked")
-  private JsonObject processFrequencyQuery(JsonObject query, Family type, Object sketch) {
+  private static JsonObject processFrequencyQuery(final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type != Family.FREQUENCY || sketch == null) {
       return null;
     }
 
-    ItemsSketch<String> sk = (ItemsSketch<String>) sketch;
+    final ItemsSketch<String> sk = (ItemsSketch<String>) sketch;
 
     // check if we need a summary
-    boolean addSummary = checkSummaryFlag(query);
+    final boolean addSummary = checkSummaryFlag(query);
 
     if (!query.has(QUERY_ERRORTYPE_FIELD)) {
       throw new SketchesException("Must specify a value for " + QUERY_ERRORTYPE_FIELD
           + " for Frequent Items queries");
     }
 
-    ErrorType errorType;
-    String errorTypeString = query.get(QUERY_ERRORTYPE_FIELD).getAsString();
+    final ErrorType errorType;
+    final String errorTypeString = query.get(QUERY_ERRORTYPE_FIELD).getAsString();
     if (errorTypeString.equals(QUERY_ERRORTYPE_NO_FP)) {
       errorType = ErrorType.NO_FALSE_POSITIVES;
     } else if (errorTypeString.equals(QUERY_ERRORTYPE_NO_FN)) {
@@ -291,11 +291,11 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
       throw new SketchesException("Unknown Frequent Items ErrorType: " + errorTypeString);
     }
 
-    ItemsSketch.Row<String>[] items = sk.getFrequentItems(errorType);
+    final ItemsSketch.Row<String>[] items = sk.getFrequentItems(errorType);
 
-    JsonArray itemArray = new JsonArray();
-    for (ItemsSketch.Row<String> item : items) {
-      JsonObject row = new JsonObject();
+    final JsonArray itemArray = new JsonArray();
+    for (final ItemsSketch.Row<String> item : items) {
+      final JsonObject row = new JsonObject();
       row.addProperty(RESPONSE_ITEM_VALUE, item.getItem());
       row.addProperty(RESPONSE_ITEM_ESTIMATE, item.getEstimate());
       row.addProperty(RESPONSE_ITEM_UPPER_BOUND, item.getUpperBound());
@@ -303,7 +303,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
       itemArray.add(row);
     }
 
-    JsonObject result = new JsonObject();
+    final JsonObject result = new JsonObject();
     result.add(RESPONSE_ITEMS_ARRAY, itemArray);
     if (addSummary)
       result.addProperty(RESPONSE_SUMMARY_FIELD, sk.toString());
@@ -312,23 +312,23 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   }
 
   @SuppressWarnings("unchecked")
-  private JsonObject processSamplingQuery(JsonObject query, Family type, Object sketch) {
+  private static JsonObject processSamplingQuery(final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
 
     // check if we need a summary
-    boolean addSummary = checkSummaryFlag(query);
+    final boolean addSummary = checkSummaryFlag(query);
     String summary = null;
 
-    long streamWeight;
-    int k;
-    JsonArray itemArray = new JsonArray();
+    final long streamWeight;
+    final int k;
+    final JsonArray itemArray = new JsonArray();
 
     switch (type) {
       case RESERVOIR:
-        ReservoirItemsSketch<String> ris = (ReservoirItemsSketch<String>) sketch;
-        for (String item : ris.getSamples()) {
+        final ReservoirItemsSketch<String> ris = (ReservoirItemsSketch<String>) sketch;
+        for (final String item : ris.getSamples()) {
           itemArray.add(item);
         }
         streamWeight = ris.getN();
@@ -338,9 +338,9 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       case VAROPT:
-        VarOptItemsSketch<String> vis = (VarOptItemsSketch<String>) sketch;
-        for (VarOptItemsSamples<String>.WeightedSample ws : vis.getSketchSamples()) {
-          JsonObject item = new JsonObject();
+        final VarOptItemsSketch<String> vis = (VarOptItemsSketch<String>) sketch;
+        for (final VarOptItemsSamples<String>.WeightedSample ws : vis.getSketchSamples()) {
+          final JsonObject item = new JsonObject();
           item.addProperty(RESPONSE_ITEM_VALUE, ws.getItem());
           item.addProperty(RESPONSE_ITEM_WEIGHT, ws.getWeight());
           itemArray.add(item);
@@ -355,7 +355,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         throw new SketchesException("processSamplingQuery() received a non-sampling sketch: " + type.toString());
     }
 
-    JsonObject result = new JsonObject();
+    final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_SKETCH_K, k);
     result.addProperty(RESPONSE_STREAM_WEIGHT, streamWeight);
     result.add(RESPONSE_ITEMS_ARRAY, itemArray);
@@ -366,13 +366,13 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   }
 
   // returns an array of rank points, or null if none in query
-  private float[] getValuesArray(JsonObject query) {
+  private static float[] getValuesArray(final JsonObject query) {
     if (query == null || !query.has(QUERY_VALUES_FIELD_NAME)) {
       return null;
     }
 
-    JsonArray valuesArray = query.get(QUERY_VALUES_FIELD_NAME).getAsJsonArray();
-    float[] values = new float[valuesArray.size()];
+    final JsonArray valuesArray = query.get(QUERY_VALUES_FIELD_NAME).getAsJsonArray();
+    final float[] values = new float[valuesArray.size()];
 
     for (int i = 0; i < values.length; ++i) {
       if (!valuesArray.get(i).isJsonPrimitive()) {
@@ -386,16 +386,16 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
 
   // returns QUERY_RESULT_TYPE_PMF if specified in QUERY_RESULT_TYPE_NAME_FIELD, otherwise returns default of
   // QUERY_RESULT_TYPE_CDF
-  private String getResultType(JsonObject query) {
+  private static String getResultType(final JsonObject query) {
     if (query == null || !query.has(QUERY_RESULT_TYPE_NAME_FIELD)) {
       return QUERY_RESULT_TYPE_CDF;
     }
 
-    JsonElement resultTypeElement = query.get(QUERY_RESULT_TYPE_NAME_FIELD);
+    final JsonElement resultTypeElement = query.get(QUERY_RESULT_TYPE_NAME_FIELD);
     if (!resultTypeElement.isJsonPrimitive())
       return QUERY_RESULT_TYPE_CDF;
 
-    String resultType = resultTypeElement.getAsString().toLowerCase();
+    final String resultType = resultTypeElement.getAsString().toLowerCase();
     if (resultType.equals(QUERY_RESULT_TYPE_PMF))
       return QUERY_RESULT_TYPE_PMF;
     else
@@ -403,13 +403,13 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   }
 
   // returns an array of provided split points, or null if none in query
-  private double[] getFractionsArray(JsonObject query) {
+  private static double[] getFractionsArray(final JsonObject query) {
     if (query == null || !query.has(QUERY_FRACTIONS_NAME_FIELD)) {
       return null;
     }
 
-    JsonArray fractionsArray = query.get(QUERY_FRACTIONS_NAME_FIELD).getAsJsonArray();
-    double[] fractions = new double[fractionsArray.size()];
+    final JsonArray fractionsArray = query.get(QUERY_FRACTIONS_NAME_FIELD).getAsJsonArray();
+    final double[] fractions = new double[fractionsArray.size()];
 
     for (int i = 0; i < fractions.length; ++i) {
       if (!fractionsArray.get(i).isJsonPrimitive()) {

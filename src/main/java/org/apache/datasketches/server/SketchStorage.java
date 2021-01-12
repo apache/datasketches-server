@@ -59,7 +59,7 @@ public class SketchStorage {
     public final ValueType type;
     public Object sketch;
 
-    SketchEntry(Family family, ValueType type, Object sketch) throws IllegalArgumentException {
+    SketchEntry(final Family family, final ValueType type, final Object sketch) throws IllegalArgumentException {
       if (isDistinctCounting(family) && type == null)
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
@@ -68,7 +68,7 @@ public class SketchStorage {
       this.sketch = sketch;
     }
 
-    SketchEntry(Family family, Object sketch) throws IllegalArgumentException {
+    SketchEntry(final Family family, final Object sketch) throws IllegalArgumentException {
       if (isDistinctCounting(family))
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
@@ -80,18 +80,18 @@ public class SketchStorage {
 
   HashMap<String, SketchEntry> sketchMap;
 
-  SketchStorage(List<SketchServerConfig.SketchInfo> sketchList) {
+  SketchStorage(final List<SketchServerConfig.SketchInfo> sketchList) {
     if (sketchList != null) {
       createSketches(sketchList);
     }
   }
 
   JsonObject listSketches() {
-    JsonObject summary = new JsonObject();
+    final JsonObject summary = new JsonObject();
 
-    JsonArray sketchList = new JsonArray(sketchMap.size());
-    for (Map.Entry<String, SketchEntry> e : sketchMap.entrySet()) {
-      JsonObject item = new JsonObject();
+    final JsonArray sketchList = new JsonArray(sketchMap.size());
+    for (final Map.Entry<String, SketchEntry> e : sketchMap.entrySet()) {
+      final JsonObject item = new JsonObject();
       item.addProperty(CONFIG_SKETCH_NAME_FIELD, e.getKey());
       switch (e.getValue().family) {
         case UNION:
@@ -128,25 +128,25 @@ public class SketchStorage {
     return summary;
   }
 
-  boolean contains(String key) {
+  boolean contains(final String key) {
      return sketchMap.containsKey(key);
   }
 
-  SketchEntry getSketch(String key) {
+  SketchEntry getSketch(final String key) {
     return sketchMap.get(key);
   }
 
   // instantiate the actual sketches, throwing if there's a duplicate key
-  private void createSketches(List<SketchServerConfig.SketchInfo> list) throws IllegalArgumentException {
+  private void createSketches(final List<SketchServerConfig.SketchInfo> list) throws IllegalArgumentException {
     sketchMap = new HashMap<>(list.size());
 
-    for (SketchServerConfig.SketchInfo info : list) {
+    for (final SketchServerConfig.SketchInfo info : list) {
       if (sketchMap.containsKey(info.name)) {
         throw new IllegalArgumentException("Duplicate sketch key: " + info.name);
       }
 
       SketchEntry sketchEntry = null;
-      Family family = BaseSketchesQueryHandler.familyFromString(info.family);
+      final Family family = BaseSketchesQueryHandler.familyFromString(info.family);
 
       switch (family) {
         case QUICKSELECT:

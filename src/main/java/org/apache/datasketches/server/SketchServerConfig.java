@@ -48,31 +48,28 @@ class SketchServerConfig {
     public String family;
     public String type;
 
-    SketchInfo(String name, int k, String family, String type) {
+    SketchInfo(final String name, final int k, final String family, final String type) {
       this.name = name;
       this.k = k;
       this.family = family;
       this.type = type;
     }
 
-    SketchInfo(String name, int k, String family) {
-      this.name = name;
-      this.k = k;
-      this.family = family;
-      this.type = null;
+    SketchInfo(final String name, final int k, final String family) {
+      this(name, k, family, null);
     }
 
   }
 
-  private int port = SketchConstants.DEFAULT_PORT;
+  private int port = DEFAULT_PORT;
   private ArrayList<SketchInfo> sketchList;
 
-  SketchServerConfig(String configFile) throws IOException {
-    JsonElement config = readJsonFromFile(configFile);
+  SketchServerConfig(final String configFile) throws IOException {
+    final JsonElement config = readJsonFromFile(configFile);
     parseConfig(config);
   }
 
-  SketchServerConfig(JsonElement config) throws IOException {
+  SketchServerConfig(final JsonElement config) throws IOException {
     parseConfig(config);
   }
 
@@ -86,22 +83,20 @@ class SketchServerConfig {
 
   // output should have a list with full info per sketch, even if input allows a
   // more condensed format
-  private JsonElement readJsonFromFile(String configFile) {
+  private static JsonElement readJsonFromFile(final String configFile) {
     JsonElement config = null;
 
-    try {
-      Reader reader = Files.newBufferedReader(Paths.get(configFile));
+    try (final Reader reader = Files.newBufferedReader(Paths.get(configFile))) {
       config = JsonParser.parseReader(reader);
-      reader.close();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       e.printStackTrace();
     }
 
     return config;
   }
 
-  private void parseConfig(JsonElement config) throws IOException {
-    Gson gson = new Gson();
+  private void parseConfig(final JsonElement config) throws IOException {
+    final Gson gson = new Gson();
 
     sketchList = new ArrayList<>();
 
@@ -109,9 +104,9 @@ class SketchServerConfig {
       // must be a list of fully-described sketches
       sketchList.addAll(Arrays.asList(gson.fromJson(config.getAsJsonArray(), SketchInfo[].class)));
     } else if (config.isJsonObject()) {
-      JsonObject confEntry = config.getAsJsonObject();
-      for (String name : confEntry.keySet()) {
-        if (name.toLowerCase().equals(CONFIG_PORT_FIELD)) {
+      final JsonObject confEntry = config.getAsJsonObject();
+      for (final String name : confEntry.keySet()) {
+        if (name.equalsIgnoreCase(CONFIG_PORT_FIELD)) {
           // port the server should use
           port = confEntry.get(name).getAsInt();
         }
@@ -120,16 +115,16 @@ class SketchServerConfig {
           sketchList.addAll(Arrays.asList(gson.fromJson(confEntry.get(name).getAsJsonArray(), SketchInfo[].class)));
         } else if (name.toLowerCase().startsWith(CONFIG_SET_PREFIX)) {
           // set* has a common name and type with an array of name names
-          JsonObject sketchSetInfo = confEntry.get(name).getAsJsonObject();
-          int k = sketchSetInfo.get(CONFIG_K_FIELD).getAsInt();
-          String family = sketchSetInfo.get(CONFIG_FAMILY_FIELD).getAsString();
+          final JsonObject sketchSetInfo = confEntry.get(name).getAsJsonObject();
+          final int k = sketchSetInfo.get(CONFIG_K_FIELD).getAsInt();
+          final String family = sketchSetInfo.get(CONFIG_FAMILY_FIELD).getAsString();
           String type = null;
           if (isDistinctCounting(BaseSketchesQueryHandler.familyFromString(family))) {
             type = sketchSetInfo.get(CONFIG_TYPE_FIELD).getAsString();
           }
-          String[] nameList = gson.fromJson(sketchSetInfo.get(CONFIG_SET_NAMES_FIELD).getAsJsonArray(), String[].class);
+          final String[] nameList = gson.fromJson(sketchSetInfo.get(CONFIG_SET_NAMES_FIELD).getAsJsonArray(), String[].class);
 
-          for (String n : nameList)
+          for (final String n : nameList)
             sketchList.add(new SketchInfo(n, k, family, type));
         }
       }

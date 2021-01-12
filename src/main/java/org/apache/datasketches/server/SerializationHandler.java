@@ -44,25 +44,25 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * </pre>
  */
 public class SerializationHandler extends BaseSketchesQueryHandler {
-  public SerializationHandler(SketchStorage sketches) {
+  public SerializationHandler(final SketchStorage sketches) {
     super(sketches, false);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  protected JsonObject processQuery(JsonObject query) {
+  protected JsonObject processQuery(final JsonObject query) {
     if (!query.has(QUERY_NAME_FIELD)) {
       throw new IllegalArgumentException("Query missing sketch name field");
     }
 
-    String name = query.get(QUERY_NAME_FIELD).getAsString();
+    final String name = query.get(QUERY_NAME_FIELD).getAsString();
     if (!sketches.contains(name)) {
       throw new IllegalArgumentException("Invalid sketch name: " + name);
     }
 
-    SketchStorage.SketchEntry se = sketches.getSketch(name);
+    final SketchStorage.SketchEntry se = sketches.getSketch(name);
 
-    byte[] bytes;
+    final byte[] bytes;
     switch (se.family) {
       case UNION:
         bytes = ((Union) se.sketch).getResult().toByteArray();
@@ -89,9 +89,9 @@ public class SerializationHandler extends BaseSketchesQueryHandler {
         throw new IllegalStateException("Unexpected value: " + se.family);
     }
 
-    String b64Sketch = Base64.getEncoder().encodeToString(bytes);
+    final String b64Sketch = Base64.getEncoder().encodeToString(bytes);
 
-    JsonObject result = new JsonObject();
+    final JsonObject result = new JsonObject();
     result.addProperty(QUERY_NAME_FIELD, name);
     result.addProperty(CONFIG_FAMILY_FIELD, se.family.getFamilyName());
     if (se.type != null)

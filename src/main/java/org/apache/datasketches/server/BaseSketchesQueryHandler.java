@@ -23,12 +23,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.net.URLDecoder;
 
 import org.apache.datasketches.Family;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -41,7 +43,7 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * <ul>
  *   <li>Extracts JSON query from querystring or POST body, as appropriate, to allow multiple input types.</li>
  *   <li>Sketches are stateful, and even reading can be disrupted by writes on another thread. A real
- *       database would have a more sophisticated locking system, but this class lets us syncrhonize across
+ *       database would have a more sophisticated locking system, but this class lets us synchronize across
  *       query types.</li>
  *   <li>Handles both JSON arrays or single JSON objects as inputs, letting the query handlers avoid
  *       code duplication.
@@ -57,7 +59,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * Basic query handler. Assumes calls must include a JSON query.
    * @param sketches The sketches database to use
    */
-  BaseSketchesQueryHandler(SketchStorage sketches) {
+  BaseSketchesQueryHandler(final SketchStorage sketches) {
     this(sketches, false);
   }
 
@@ -66,7 +68,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * @param sketches The sketches database to use
    * @param queryExempt <tt>true</tt> if a query is not required, otherwise <tt>false</tt>
    */
-  BaseSketchesQueryHandler(SketchStorage sketches, boolean queryExempt) {
+  BaseSketchesQueryHandler(final SketchStorage sketches, final boolean queryExempt) {
     if (sketches == null) {
       throw new IllegalArgumentException("Cannot initialize handler with SketchStorage == null");
     }
@@ -74,13 +76,15 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
     this.queryExempt = queryExempt;
   }
 
-  JsonElement checkMethodAndReadJson(Request baseRequest,
-                                     HttpServletRequest request,
-                                     HttpServletResponse response) throws IOException {
+  static JsonElement checkMethodAndReadJson(final Request baseRequest,
+                                            final HttpServletRequest request,
+                                            final HttpServletResponse response) throws IOException {
     JsonElement query = null;
     if (request.getMethod().equals("POST")) {
       response.setContentType("application/json");
-      query = JsonParser.parseReader(request.getReader());
+      try (final Reader reader = request.getReader()) {
+        query = JsonParser.parseReader(reader);
+      }
     } else if (request.getMethod().equals("GET")) {
       response.setContentType("text/html");
       query = JsonParser.parseString(URLDecoder.decode(request.getQueryString(), "utf-8"));
@@ -104,15 +108,15 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * @param query A JSON query to process
    * @return A JSON response
    */
-  final synchronized JsonObject callProcessQuery(JsonObject query) {
+  final synchronized JsonObject callProcessQuery(final JsonObject query) {
     return processQuery(query);
   }
 
   @Override
-  public void handle(String target,
-                     Request baseRequest,
-                     HttpServletRequest request,
-                     HttpServletResponse response) throws IOException {
+  public void handle(final String target,
+                     final Request baseRequest,
+                     final HttpServletRequest request,
+                     final HttpServletResponse response) throws IOException {
     JsonElement query = null;
     if (!queryExempt && ((query = checkMethodAndReadJson(baseRequest, request, response)) == null)) {
       return;
@@ -128,8 +132,8 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
       if (query == null) {
         result = callProcessQuery(null);
       } else if (query.isJsonArray()) {
-        for (JsonElement subQuery : query.getAsJsonArray()) {
-          JsonObject subResult = callProcessQuery(subQuery.getAsJsonObject());
+        for (final JsonElement subQuery : query.getAsJsonArray()) {
+          final JsonObject subResult = callProcessQuery(subQuery.getAsJsonObject());
           if (subResult != null) {
             // lazy initialization to avoid possibly empty array
             if (result == null) {
@@ -143,14 +147,14 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
       }
 
       if (result != null) {
-        response.getWriter().print(result.toString());
-        //response.getWriter().print(new GsonBuilder().setPrettyPrinting().create().toJson(result));
+        //response.getWriter().print(result.toString());
+        response.getWriter().print(new GsonBuilder().setPrettyPrinting().create().toJson(result));
       }
 
       // we're ok if we reach here without an exception
       response.setStatus(HttpServletResponse.SC_OK);
-    } catch (Exception e) {
-      JsonObject error = new JsonObject();
+    } catch (final Exception e) {
+      final JsonObject error = new JsonObject();
       error.addProperty(ERROR_KEY, e.getMessage());
       response.setStatus(UNPROCESSABLE_ENTITY);
     }
@@ -158,7 +162,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
     baseRequest.setHandled(true);
   }
 
-  static Family familyFromString(String type) throws IllegalArgumentException {
+  static Family familyFromString(final String type) throws IllegalArgumentException {
     switch (type.toLowerCase()) {
       case SKETCH_FAMILY_THETA:
         return Family.QUICKSELECT;

@@ -56,7 +56,7 @@ public enum ValueType {
   private final String typeName_;
 
   static {
-    for (ValueType t : values()) {
+    for (final ValueType t : values()) {
       lookupTypeName.put(t.getTypeName().toLowerCase(), t);
     }
   }

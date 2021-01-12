@@ -27,6 +27,8 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 
+import static org.apache.datasketches.server.SketchConstants.*;
+
 /**
  * Creates a very basic sketch server running embedded Jetty. Configuration options are specified in a config
  * file; for details @see SketchServerConfig.
@@ -39,7 +41,7 @@ public class SketchServer {
   /**
    * Creates a server with the provided configuration
    * @param configFile Path to a configuration file following the <tt>SketchServerConfig</tt> format
-   * @throws IOException
+   * @throws IOException on parse errors
    */
   public SketchServer(final String configFile) throws IOException {
     config = new SketchServerConfig(configFile);
@@ -50,26 +52,26 @@ public class SketchServer {
     server = new Server(config.getPort());
 
     // Error page unless you have a correct URL
-    ContextHandler contextRoot = new ContextHandler("/");
+    final ContextHandler contextRoot = new ContextHandler("/");
     contextRoot.setContextPath("/");
     contextRoot.setHandler(new ErrorHandler());
 
-    ContextHandler contextStatus = new ContextHandler(SketchConstants.STATUS_PATH);
+    final ContextHandler contextStatus = new ContextHandler(STATUS_PATH);
     contextStatus.setHandler(new StatusHandler(sketches));
 
-    ContextHandler contextSerialize = new ContextHandler(SketchConstants.SERIALIZE_PATH);
+    final ContextHandler contextSerialize = new ContextHandler(SERIALIZE_PATH);
     contextSerialize.setHandler(new SerializationHandler(sketches));
 
-    ContextHandler contextUpdate = new ContextHandler(SketchConstants.UPDATE_PATH);
+    final ContextHandler contextUpdate = new ContextHandler(UPDATE_PATH);
     contextUpdate.setHandler(new UpdateHandler(sketches));
 
-    ContextHandler contextMerge = new ContextHandler(SketchConstants.MERGE_PATH);
+    final ContextHandler contextMerge = new ContextHandler(MERGE_PATH);
     contextMerge.setHandler(new MergeHandler(sketches));
 
-    ContextHandler contextQuery = new ContextHandler(SketchConstants.QUERY_PATH);
+    final ContextHandler contextQuery = new ContextHandler(QUERY_PATH);
     contextQuery.setHandler(new DataQueryHandler(sketches));
 
-    ContextHandlerCollection contexts =
+    final ContextHandlerCollection contexts =
         new ContextHandlerCollection(contextRoot,
             contextStatus,
             contextSerialize,
@@ -81,7 +83,7 @@ public class SketchServer {
 
   /**
    * Initializes the sketches, configures query handlers, and Starts the server.
-   * @throws Exception
+   * @throws Exception Relays exceptions from parsing config or running the server
    */
   public void start() throws Exception {
     sketches = new SketchStorage(config.getSketchList());
@@ -110,11 +112,11 @@ public class SketchServer {
     return -1;
   }
 
-  public static void main(String[] args) throws Exception {
+  public static void main(final String[] args) throws Exception {
     //String confFile = args[0];
-    String confFile = "conf3.json";
+    final String confFile = "example/conf.json";
 
-    SketchServer sketchServer = new SketchServer(confFile);
+    final SketchServer sketchServer = new SketchServer(confFile);
     sketchServer.start();
   }
 }

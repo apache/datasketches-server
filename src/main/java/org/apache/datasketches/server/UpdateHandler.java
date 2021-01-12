@@ -52,7 +52,7 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * Each <em>value</em> may be a stand-alone item or, for sketches accepting weighted inputs, may be a JSON
  * object: <tt>{ "item": &lt;value&gt;, "weight": &lt;weight&gt; }</tt>. Attempting to use a weight with a
  * sketch that does not support weighted inputs will result in an error. The multi-value update format
- * may contain a mux of weighted and unweighted items, as lonig s the sketch accepts weighted values.
+ * may contain a mux of weighted and unweighted items, as long s the sketch accepts weighted values.
  * </p>
  * <p>
  * The JSON parsing library does not allow duplicate key names; to send multiple values into the same sketch
@@ -65,16 +65,16 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * </p>
  */
 public class UpdateHandler extends BaseSketchesQueryHandler {
-  public UpdateHandler(SketchStorage sketches) {
+  public UpdateHandler(final SketchStorage sketches) {
     super(sketches);
   }
 
   @Override
-  protected JsonObject processQuery(JsonObject query) {
-    for (Map.Entry<String, JsonElement> entry : query.entrySet()) {
-      String name = entry.getKey();
-      SketchStorage.SketchEntry se = sketches.getSketch(name);
-      JsonElement data = entry.getValue();
+  protected JsonObject processQuery(final JsonObject query) {
+    for (final Map.Entry<String, JsonElement> entry : query.entrySet()) {
+      final String name = entry.getKey();
+      final SketchStorage.SketchEntry se = sketches.getSketch(name);
+      final JsonElement data = entry.getValue();
 
       if (name == null || se == null || data == null) {
         throw new IllegalArgumentException("Attempt to call update with missing name or sketch not found");
@@ -92,20 +92,20 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
   }
 
   @SuppressWarnings("unchecked")
-  private void processBatchUpdate(SketchStorage.SketchEntry entry,
-                                  JsonArray data) {
+  private static void processBatchUpdate(final SketchStorage.SketchEntry entry,
+                                         final JsonArray data) {
     switch (entry.family) {
       case UNION: // theta
         assert(entry.type != null);
         switch (entry.type) {
           case FLOAT: case DOUBLE:
-            for (JsonElement e : data) { ((Union) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (JsonElement e : data) { ((Union) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (JsonElement e : data) { ((Union) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsString()); }
             break;
         }
         break;
@@ -114,13 +114,13 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         assert(entry.type != null);
         switch (entry.type) {
           case FLOAT: case DOUBLE:
-            for (JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
             break;
         }
         break;
@@ -129,31 +129,31 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         assert(entry.type != null);
         switch (entry.type) {
           case FLOAT: case DOUBLE:
-            for (JsonElement e : data) { ((HllSketch) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((HllSketch) entry.sketch).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
             break;
         }
         break;
 
       case KLL:
-        for (JsonElement e : data) { ((KllFloatsSketch) entry.sketch).update(e.getAsFloat()); }
+        for (final JsonElement e : data) { ((KllFloatsSketch) entry.sketch).update(e.getAsFloat()); }
         break;
 
       case FREQUENCY:
-        for (JsonElement e : data) {
+        for (final JsonElement e : data) {
           if (e.isJsonObject()) {
-            JsonObject inputPair = e.getAsJsonObject();
+            final JsonObject inputPair = e.getAsJsonObject();
             if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
               throw new IllegalArgumentException("Frequent Items input pairs must include both "
                   + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
             }
-            String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-            int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
+            final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+            final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
             ((ItemsSketch<String>) entry.sketch).update(item, weight);
           } else {
             ((ItemsSketch<String>) entry.sketch).update(e.getAsString());
@@ -162,19 +162,19 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case RESERVOIR:
-        for (JsonElement e : data) { ((ReservoirItemsSketch<String>) entry.sketch).update(e.getAsString()); }
+        for (final JsonElement e : data) { ((ReservoirItemsSketch<String>) entry.sketch).update(e.getAsString()); }
         break;
 
       case VAROPT:
-        for (JsonElement e : data) {
+        for (final JsonElement e : data) {
           if (e.isJsonObject()) {
-            JsonObject inputPair = e.getAsJsonObject();
+            final JsonObject inputPair = e.getAsJsonObject();
             if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
               throw new IllegalArgumentException("VarOpt input pairs must include both "
                   + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
             }
-            String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-            double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
+            final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+            final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
             ((VarOptItemsSketch<String>) entry.sketch).update(item, weight);
           } else {
             ((VarOptItemsSketch<String>) entry.sketch).update(e.getAsString(), 1.0);
@@ -188,8 +188,8 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
   }
 
   @SuppressWarnings("unchecked")
-  private void processSingleUpdate(SketchStorage.SketchEntry entry,
-                                   JsonElement data) {
+  private static void processSingleUpdate(final SketchStorage.SketchEntry entry,
+                                          final JsonElement data) {
     switch (entry.family) {
       case UNION:
         assert(entry.type != null);
@@ -242,13 +242,13 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
 
       case FREQUENCY:
         if (data.isJsonObject()) {
-          JsonObject inputPair = data.getAsJsonObject();
+          final JsonObject inputPair = data.getAsJsonObject();
           if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
             throw new IllegalArgumentException("Frequent Items input pairs must include both "
                 + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
           }
-          String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-          int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
+          final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+          final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
           ((ItemsSketch<String>) entry.sketch).update(item, weight);
         } else {
           ((ItemsSketch<String>) entry.sketch).update(data.getAsString());
@@ -261,13 +261,13 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
 
       case VAROPT:
         if (data.isJsonObject()) {
-          JsonObject inputPair = data.getAsJsonObject();
+          final JsonObject inputPair = data.getAsJsonObject();
           if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
             throw new IllegalArgumentException("VarOpt input pairs must include both "
                 + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
           }
-          String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-          double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
+          final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+          final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
           ((VarOptItemsSketch<String>) entry.sketch).update(item, weight);
         } else {
           ((VarOptItemsSketch<String>) entry.sketch).update(data.getAsString(), 1.0);

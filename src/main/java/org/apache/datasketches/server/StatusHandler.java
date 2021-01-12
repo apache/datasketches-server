@@ -26,12 +26,12 @@ import com.google.gson.JsonObject;
  */
 public class StatusHandler extends BaseSketchesQueryHandler {
 
-  public StatusHandler(SketchStorage sketches) {
+  public StatusHandler(final SketchStorage sketches) {
     super(sketches, true);
   }
 
   @Override
-  protected JsonObject processQuery(JsonObject query) {
+  protected JsonObject processQuery(final JsonObject query) {
     return sketches.listSketches();
   }
 }
