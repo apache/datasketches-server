@@ -1,0 +1,13 @@
+[
+  { "name": "topItems",
+    "errorType": "noFalsePositives"
+  },
+  { "name": "duration",
+    "resultType": "cdf",
+    "values": [500, 800, 1000],
+    "fractions": [0.2, 0.5, 0.8]
+  },
+  { "name": "cpcOfNumbers",
+    "summary": false
+  }
+]

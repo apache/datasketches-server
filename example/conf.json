@@ -1,0 +1,57 @@
+{
+    "port": 8080,
+    "sketches_A": [
+	{ "name": "cpcOfNumbers",
+	  "k": 12,
+	  "type": "long",
+	  "family": "cpc"
+	},
+	{ "name": "cpcOfStrings",
+	  "k": 14,
+	  "type": "string",
+	  "family": "cpc"
+	}	
+    ],
+    "set1": {
+	"family": "hll",
+	"type": "string",
+	"k": 14,
+	"names": [
+	    "hll1",
+	    "hll2",
+	    "hll3",
+	    "hll4"
+	]
+    },
+    "set2": {
+	"k": 12,
+	"family": "theta",
+	"type": "int",
+	"names": [
+	    "theta0",
+	    "theta1",
+	    "theta2",
+	    "theta3",
+	    "theta4"
+	]
+    },
+    "sketches_B": [
+	{ "name": "duration",
+	  "k": "160",
+	  "family": "kll"
+	},
+	{ "name": "topItems",
+	  "k": "128",
+	  "family": "frequency"
+	},
+	{ "name": "rs",
+	  "k": "20",
+	  "family": "reservoir"
+	},
+	{ "name": "vo",
+	  "k": "20",
+	  "family": "varopt"
+	}	
+    ]
+}
+	

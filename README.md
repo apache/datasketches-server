@@ -7,7 +7,7 @@ This is not intended to provide a high-performance database; there are already
 existing integrations with PostgreSQL or Druid for such cases. The focus here 
 is on ease-of-use rather than speed.
 
-The repository is still in a very early state and lacks both unit tests and
+The repository is still in an early state and lacks both unit tests and
 robust documentation.
 
 ## Interaction
@@ -53,7 +53,7 @@ are presented to the sketch in a consistent way. The supported types are:
 | long      | 64-bit signed integer |
 | float     | 32-bit floating-point value |
 | double    | 64-bit floating-point value |
-| string    | Java String |
+| string    | Java String (UTF-16) |
 
 
 ### Configuration
@@ -62,8 +62,6 @@ The configuration file is passed in at server creation time.  Aside from the por
 sketches held by the server. All sketches are instantiated at initialization, which keeps memory usage (mostly)
 constrained during operation. Keep in mind that quantiles sketches do grow indefinitely, although very slowly as the
 number of samples increases.
-
-Examples are taken from [conf.json][example/conf.json].
 
 There are two mechanisms for defining sketches. The first is an array of
 fully-described entries. The key for such an array must have a prefix `sketches`:
@@ -122,17 +120,27 @@ or
 ```
 The above examples create one set of 3 HLL sketches and one set of 5 theta sketches, respectively.
 
+Finally, the port on which the server runs is specified with `port`:
+```json
+{
+  "port": 8080
+}
+```
+
 ### Supported Operations
 
 The available calls are:
 * `/update`
-* `/merge`
 * `/query`
 * `/serialize`
+* `/merge`
 * `/status`
 
 Each is described below, along with examples of input and output. As noted above, all calls accepting input may
 be invoked with either a single JSON object or a JSON Array of such objects.
+
+Examples are taken from the sketches configured in [conf.json][example/conf.json].
+
 
 ### Update
 
@@ -143,16 +151,17 @@ For sketches that accept weighted values, specifically Frequent Items and VarOpt
 weight will be treated as having a weight of 1.0. To include a weight, the input must be a JSON object with both `item`
 and `weight`. An array of values to update may include a mix of plain, unweighted values and weighted input objects.
 
-An input to update may look like:
+An input to `/update`, taken from [update.json][example/update.json], may look like:
 ```json
 {
-    "cpc_int": [1, 2, 2, 3, 4, 5],
-    "cpc_string": "single-item",
-    "fi": ["abc",
+    "cpcOfNumbers": [1, 2, 2, 3, 4, 5],
+    "cpcOfStrings": "123e4567-e89b-12d3-a456-426655440000",
+    "topItems": ["abc",
 	   { "item": "def", "weight": 3 },
 	   { "item": "ghi", "weight": 2 },
 	   "def"
 	  ],
+  "duration": [502, 194, 793, 443, 1204, 892, 1075],
     "theta0": [1, 2, 3, 4, 5, 6],
     "theta1": [5, 6, 7, 8, 9, 10]
 }
@@ -161,82 +170,208 @@ This example demonstrates the variety of inputs types, including repeated values
 
 There is no result returned from a successful call to update aside from the standard status code 200.
 
+
+### Query
+
+Once the server has received input data, a `/query` request will produce estimates from one or more sketches.
+
+A sample query may be found in [query.json][example/query.json]:
 ```json
-{
-  "giveName": ["Alice", "Bob", "Cindy"], 
-  "heightInches": [62, 70, 64],
-  "postalCode": [12345, 11111, 94030]  
-}
+[
+  { "name": "topItems",
+    "errorType": "noFalsePositives"
+  },
+  { "name": "duration",
+    "resultType": "cdf",
+    "values": [500, 800, 1000],
+    "fractions": [0.2, 0.5, 0.8]
+  },
+  { "name": "cpcOfNumbers",
+    "summary": false
+  }
+]
 ```
+The example shows the use of an array to query multiple sketches with a single request. All sketches support
+the `summary` property, which returns readable string with summary information about the sketch, although structured
+primarily for debugging. The other properties supported in a query are specitic to the sketch type:
+
+* theta, cpc, hll
+  * No additional fields; returns all estimates
+* kll
+  * `resultType`: indicates `pmf` or `cdf` for rank results with a `values` query. A single
+    query may include only one.
+  * `values`: specifies split points in value space when querying ranks (as pmf or cdf)
+  * `fractions`: specifies split points in rank space when querying values from the sketch   
+* frequency
+  * `errorType`: specifies `noFalsePositives` or `noFalseNegatives`
+* varopt, reservoir
+  * No additional fields; returns all items in sketch
+
+Using the above query after the presented input returns
+```json
+[
+  {
+    "name": "topItems",
+    "items": [
+      {
+        "item": "def",
+        "estimate": 4,
+        "upperBound": 4,
+        "lowerBound": 4
+      },
+      {
+        "item": "ghi",
+        "estimate": 2,
+        "upperBound": 2,
+        "lowerBound": 2
+      },
+      {
+        "item": "abc",
+        "estimate": 1,
+        "upperBound": 1,
+        "lowerBound": 1
+      }
+    ]
+  },
+  {
+    "name": "duration",
+    "streamLength": 7,
+    "estimationMode": false,
+    "minValue": 194.0,
+    "maxValue": 1204.0,
+    "estimatedCDF": [
+      {
+        "value": 500.0,
+        "rank": 0.2857142857142857
+      },
+      {
+        "value": 800.0,
+        "rank": 0.5714285714285714
+      },
+      {
+        "value": 1000.0,
+        "rank": 0.7142857142857143
+      },
+      {
+        "value": 1204.0,
+        "rank": 1.0
+      }
+    ],
+    "estimatedQuantiles": [
+      {
+        "rank": 0.20000000298023224,
+        "quantile": 443.0
+      },
+      {
+        "rank": 0.5,
+        "quantile": 793.0
+      },
+      {
+        "rank": 0.800000011920929,
+        "quantile": 1075.0
+      }
+    ]
+  },
+  {
+    "name": "cpcOfNumbers",
+    "estimate": 5.000946316025309,
+    "estimationMode": true,
+    "plus1StdDev": 6.0,
+    "plus2StdDev": 6.0,
+    "plus3StdDev": 6.0,
+    "minus1StdDev": 5.0,
+    "minus2StdDev": 5.0,
+    "minus3StdDev": 5.0
+  }
+]
+```
+
+### Serialize
+
+
 
 ### Merge
 
 
-
-
-### Query
-
-### Serialize
-
 ### Status
 
-A query to the `/status` page returns a list of the configured sketches. There is no input to this query.
+A request to the `/status` page returns a list of the configured sketches. There is no input to this query.
 
 Using `example/conf.json` to launch the server, a call to status returns:
 ```json
 {
-  "count": 11,
+  "count": 15,
   "sketches": [
-    {
-      "name": "hll_3",
-      "type": "double",
-      "family": "hll"
-    },
-    {
-      "name": "hll_4",
-      "type": "double",
-      "family": "hll"
-    },
     {
       "name": "rs",
       "family": "reservoir"
     },
     {
-      "name": "fi",
-      "family": "frequency"
+      "name": "cpcOfNumbers",
+      "type": "long",
+      "family": "cpc"
     },
     {
-      "name": "hll_1",
-      "type": "double",
-      "family": "hll"
+      "name": "theta1",
+      "type": "int",
+      "family": "theta"
     },
     {
-      "name": "hll_2",
-      "type": "double",
-      "family": "hll"
+      "name": "theta0",
+      "type": "int",
+      "family": "theta"
     },
     {
-      "name": "cpc",
+      "name": "theta4",
+      "type": "int",
+      "family": "theta"
+    },
+    {
+      "name": "theta3",
+      "type": "int",
+      "family": "theta"
+    },
+    {
+      "name": "theta2",
+      "type": "int",
+      "family": "theta"
+    },
+    {
+      "name": "duration",
+      "family": "kll"
+    },
+    {
+      "name": "cpcOfStrings",
       "type": "string",
       "family": "cpc"
     },
     {
-      "name": "theta_string",
+      "name": "hll1",
       "type": "string",
-      "family": "theta"
-    },
-    {
-      "name": "theta_int",
-      "type": "int",
-      "family": "theta"
+      "family": "hll"
     },
     {
       "name": "vo",
       "family": "varopt"
     },
     {
-      "name": "kll",
-      "family": "kll"
+      "name": "hll2",
+      "type": "string",
+      "family": "hll"
+    },
+    {
+      "name": "hll3",
+      "type": "string",
+      "family": "hll"
+    },
+    {
+      "name": "hll4",
+      "type": "string",
+      "family": "hll"
+    },
+    {
+      "name": "topItems",
+      "family": "frequency"
     }
   ]
 }

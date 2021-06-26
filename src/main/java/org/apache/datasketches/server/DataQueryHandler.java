@@ -60,26 +60,30 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     }
 
     final SketchStorage.SketchEntry se = sketches.getSketch(key);
-    final JsonObject result;
+    JsonObject result = new JsonObject();
+
+    // pre-populate with the sketch name, but may be overwritten with
+    // null depending on the queyr
+    result.addProperty(QUERY_NAME_FIELD, key);
 
     switch (se.family) {
       case UNION:
       case HLL:
       case CPC:
-        result = processDistinctQuery(query, se.family, se.sketch);
+        result = processDistinctQuery(result, query, se.family, se.sketch);
         break;
 
       case KLL:
-        result = processQuantilesQuery(query, se.family, se.sketch);
+        result = processQuantilesQuery(result, query, se.family, se.sketch);
         break;
 
       case FREQUENCY:
-        result = processFrequencyQuery(query, se.family, se.sketch);
+        result = processFrequencyQuery(result, query, se.family, se.sketch);
         break;
 
       case RESERVOIR:
       case VAROPT:
-        result = processSamplingQuery(query, se.family, se.sketch);
+        result = processSamplingQuery(result, query, se.family, se.sketch);
         break;
 
       default:
@@ -97,7 +101,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     return addSummary;
   }
 
-  private static JsonObject processDistinctQuery(final JsonObject query, final Family type, final Object sketch) {
+  private static JsonObject processDistinctQuery(final JsonObject result, final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
@@ -156,10 +160,10 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       default:
-        throw new IllegalArgumentException("Unknown distinct counting sketch type: " + type.toString());
+        throw new IllegalArgumentException("Unknown distinct counting sketch type: " + type);
     }
 
-    final JsonObject result = new JsonObject();
+    //final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_ESTIMATE_FIELD, estimate);
     result.addProperty(RESPONSE_ESTIMATION_MODE_FIELD, isEstimationMode);
     result.addProperty(RESPONSE_P1STDEV_FIELD, p1StdDev);
@@ -174,7 +178,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
     return result;
   }
 
-  private static JsonObject processQuantilesQuery(final JsonObject query, final Family type, final Object sketch) {
+  private static JsonObject processQuantilesQuery(final JsonObject result, final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
@@ -204,6 +208,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         minValue = kll.getMinValue();
         streamLength = kll.getN();
 
+        // TODO: consider valuesPMF vs valuesCDF calls to allow a mix?
         if (values != null) {
           ranks = resultType.equals(QUERY_RESULT_TYPE_CDF) ? kll.getCDF(values) : kll.getPMF(values);
         }
@@ -217,10 +222,10 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       default:
-        throw new SketchesException("processQuantilesQuery() received a non-quantiles sketch: " + type.toString());
+        throw new SketchesException("processQuantilesQuery() received a non-quantiles sketch: " + type);
     }
 
-    final JsonObject result = new JsonObject();
+    //final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_STREAM_LENGTH, streamLength);
     result.addProperty(RESPONSE_ESTIMATION_MODE_FIELD, isEstimationMode);
     result.addProperty(RESPONSE_MIN_VALUE, minValue);
@@ -266,7 +271,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   // only one sketch type here so could use ItemsSketch<String> instead of Object, but
   // we'll eep the signatures generic here
   @SuppressWarnings("unchecked")
-  private static JsonObject processFrequencyQuery(final JsonObject query, final Family type, final Object sketch) {
+  private static JsonObject processFrequencyQuery(final JsonObject result, final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type != Family.FREQUENCY || sketch == null) {
       return null;
     }
@@ -303,7 +308,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
       itemArray.add(row);
     }
 
-    final JsonObject result = new JsonObject();
+    //final JsonObject result = new JsonObject();
     result.add(RESPONSE_ITEMS_ARRAY, itemArray);
     if (addSummary)
       result.addProperty(RESPONSE_SUMMARY_FIELD, sk.toString());
@@ -312,7 +317,7 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
   }
 
   @SuppressWarnings("unchecked")
-  private static JsonObject processSamplingQuery(final JsonObject query, final Family type, final Object sketch) {
+  private static JsonObject processSamplingQuery(final JsonObject result, final JsonObject query, final Family type, final Object sketch) {
     if (query == null || type == null || sketch == null) {
       return null;
     }
@@ -352,10 +357,10 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
         break;
 
       default:
-        throw new SketchesException("processSamplingQuery() received a non-sampling sketch: " + type.toString());
+        throw new SketchesException("processSamplingQuery() received a non-sampling sketch: " + type);
     }
 
-    final JsonObject result = new JsonObject();
+    //final JsonObject result = new JsonObject();
     result.addProperty(RESPONSE_SKETCH_K, k);
     result.addProperty(RESPONSE_STREAM_WEIGHT, streamWeight);
     result.add(RESPONSE_ITEMS_ARRAY, itemArray);

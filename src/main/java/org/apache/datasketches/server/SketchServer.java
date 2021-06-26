@@ -113,10 +113,7 @@ public class SketchServer {
   }
 
   public static void main(final String[] args) throws Exception {
-    //String confFile = args[0];
-    final String confFile = "example/conf.json";
-
-    final SketchServer sketchServer = new SketchServer(confFile);
+    final SketchServer sketchServer = new SketchServer(args.length > 0 ? args[0] : "example/conf.json");
     sketchServer.start();
   }
 }
