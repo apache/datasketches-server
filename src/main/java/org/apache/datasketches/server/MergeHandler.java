@@ -49,6 +49,7 @@ import com.google.gson.JsonObject;
  * <pre>
  *   {
  *     "target": "&lt;destination_key&gt;", // optional: return serialized result if missing
+ *     "k": &lt;&intgt;, // optional: used (and required) only if no target
  *     "source": [ { "family": "&lt;sketch_family&gt;",
  *                "data": "&lt;base64_encoded_sketch&gt;"
  *              } ]
@@ -107,8 +108,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
     // skBytes == null if merging into another sketch; only non-null if returning a serialized image
     if (skBytes != null) {
       final JsonObject result = new JsonObject();
-      result.addProperty(SketchConstants.QUERY_ENCODING_FIELD, SketchConstants.ENCODING_TYPE);
-      result.addProperty(SketchConstants.QUERY_SKETCH_FIELD, Base64.getEncoder().encodeToString(skBytes));
+      result.addProperty(SketchConstants.QUERY_SKETCH_FIELD, Base64.getUrlEncoder().encodeToString(skBytes));
       return result;
     } else {
       return null;
@@ -160,7 +160,8 @@ public class MergeHandler extends BaseSketchesQueryHandler {
 
         final Family skFamily = familyFromString(sourceObj.get(SketchConstants.QUERY_FAMILY_FIELD).getAsString());
         final String skString = sourceObj.get(SketchConstants.QUERY_DATA_FIELD).getAsString();
-        if (skString == null || (family != null && family != skFamily)) {
+        if (skString == null || (family != null
+            && ((family != Family.UNION && family != skFamily) || (family == Family.UNION && skFamily != Family.QUICKSELECT)))) {
           throw new SketchesException("Input sketches must exist and be of the same family as the target");
         }
 
@@ -181,7 +182,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
       return null;
     }
 
-    final Memory skBytes = Memory.wrap(Base64.getDecoder().decode(b64String));
+    final Memory skBytes = Memory.wrap(Base64.getUrlDecoder().decode(b64String));
 
     switch (family) {
       case QUICKSELECT:
@@ -206,7 +207,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
         return VarOptItemsSketch.heapify(skBytes, new ArrayOfStringsSerDe());
 
       default:
-        throw new SketchesException("Unsupported sketch family: " + family.toString());
+        throw new SketchesException("Unsupported sketch family: " + family);
     }
   }
 
@@ -220,11 +221,11 @@ public class MergeHandler extends BaseSketchesQueryHandler {
     switch (family) {
       case UNION:
       case QUICKSELECT: {
-        // for HLL, the destination is already a union so no need to add explicitly
+        // for theta, the destination is already a union so no need to add explicitly
         final Union dst = dstEntry == null ? new SetOperationBuilder().setNominalEntries(1 << k).buildUnion()
             : (Union) dstEntry.sketch;
         for (final Object obj : sketchList) {
-          dst.update((CompactSketch) obj);
+          dst.union((CompactSketch) obj);
         }
 
         if (dstEntry == null) {
@@ -338,7 +339,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
       }
 
       default:
-        throw new SketchesException("Unsupported sketch family: " + family.toString());
+        throw new SketchesException("Unsupported sketch family: " + family);
     }
   }
 }

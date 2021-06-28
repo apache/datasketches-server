@@ -288,16 +288,81 @@ Using the above query after the presented input returns
 
 ### Serialize
 
+`/serialize` provides a way to extract a sketch from the server in a portable format. The serialized image is an
+array of bytes, with the server returning a value using the standard URL-safe bas64 encoding. In addition to the
+serialized string, the response includes the sketch family type and, for distinct counting sketches,, the type
+of items the sketch accepts.
+
+From [serialize.json][example/serialize.json], a request for several serialized results looks like:
+```json
+[
+  { "name": "duration" },
+  { "name": "cpcOfNumbers" }
+]
+```
+After the update example above, the result (intentionally using results with short serialized strings) is:
+```json
+[
+  {
+    "name": "duration",
+    "family": "KLL",
+    "sketch": "BQEPAKAACAAHAAAAAAAAAKAAAQCZAAAAAABCQwCAlkQAYIZEAABfRACAlkQAgN1DAEBGRAAAQkMAAPtD"
+  },
+  {
+    "name": "cpcOfNumbers",
+    "family": "CPC",
+    "type": "long",
+    "sketch": "CAEQDAAOzJMFAAAAAgAAAAAAAABA_K9Ag4UxEvgAFEDW1VZChQZnQQ\u003d\u003d"
+  }
+]
+```
+
+Keep in mind that the serialized images may become quite large depending on the sketch configuration and
+the number of items submitted to the sketch.
 
 
 ### Merge
 
+All sketches included in the DataSketches library support merging. The server has a constraint on merging in that 
+adding new sketches to an existing server is not supported; all sketches must be specified at initialization.
+Merging supports two models: Merging into an existing sketch, and returning the serialized image of the resulting
+sketch.
+
+Again using the update example from earlier, we can call `/merge` using [merge.json][example/merge.json], where
+the in-line image is 5 distinct items that do not overlap anything in [update.json][example/update.json]: 
+```json
+{ "target": "theta0",
+  "source": [
+      "theta0",
+      "theta1",
+      "theta2",
+    {"family": "theta",
+     "data":  "AgMDAAAazJMFAAAAAACAP_s4eYkTJI8BbakWvEpmYR4jpVs4Gv10Hz663KNvb7YgVx7EnK9Blzo\u003d" }
+  ]
+}
+```
+
+Upon a successful merge, there is no response beyond the standard 200 status code. The result can be seen by
+querying the sketch. Doing so, we can see the expected result (with the sketch still in exact mode):
+```json
+{
+  "name": "theta0",
+  "estimate": 15.0,
+  "estimationMode": false,
+  "plus1StdDev": 15.0,
+  "plus2StdDev": 15.0,
+  "plus3StdDev": 15.0,
+  "minus1StdDev": 15.0,
+  "minus2StdDev": 15.0,
+  "minus3StdDev": 15.0
+}
+```
 
 ### Status
 
 A request to the `/status` page returns a list of the configured sketches. There is no input to this query.
 
-Using `example/conf.json` to launch the server, a call to status returns:
+Using [conf.json][example/conf.json] to launch the server, a call to `/status` returns:
 ```json
 {
   "count": 15,

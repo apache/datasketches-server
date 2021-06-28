@@ -30,7 +30,6 @@ public final class SketchConstants {
   // JSON Query/Update/Merge Field Names
   public static final String QUERY_NAME_FIELD = "name";
   public static final String QUERY_FAMILY_FIELD = "family";
-  public static final String QUERY_ENCODING_FIELD = "encoding";
   public static final String QUERY_SKETCH_FIELD = "sketch";
   public static final String QUERY_DATA_FIELD = "data";
   public static final String QUERY_PAIR_ITEM_FIELD = "item";
@@ -110,6 +109,4 @@ public final class SketchConstants {
   public static final int UNPROCESSABLE_ENTITY = 422; // defined, but not in HttpServletResponse.SC_* codes
 
   public static final String ERROR_KEY = "error";
-
-  public static final String ENCODING_TYPE = "base64";
 }

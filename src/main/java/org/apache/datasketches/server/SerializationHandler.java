@@ -89,14 +89,13 @@ public class SerializationHandler extends BaseSketchesQueryHandler {
         throw new IllegalStateException("Unexpected value: " + se.family);
     }
 
-    final String b64Sketch = Base64.getEncoder().encodeToString(bytes);
+    final String b64Sketch = Base64.getUrlEncoder().encodeToString(bytes);
 
     final JsonObject result = new JsonObject();
     result.addProperty(QUERY_NAME_FIELD, name);
     result.addProperty(CONFIG_FAMILY_FIELD, se.family.getFamilyName());
     if (se.type != null)
       result.addProperty(CONFIG_TYPE_FIELD, se.type.getTypeName());
-    result.addProperty(QUERY_ENCODING_FIELD, ENCODING_TYPE);
     result.addProperty(QUERY_SKETCH_FIELD, b64Sketch);
 
     return result;
