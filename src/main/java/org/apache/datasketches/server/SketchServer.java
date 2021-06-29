@@ -71,13 +71,17 @@ public class SketchServer {
     final ContextHandler contextQuery = new ContextHandler(QUERY_PATH);
     contextQuery.setHandler(new DataQueryHandler(sketches));
 
+    final ContextHandler contextReset = new ContextHandler(RESET_PATH);
+    contextReset.setHandler(new ResetHandler(sketches));
+
     final ContextHandlerCollection contexts =
         new ContextHandlerCollection(contextRoot,
             contextStatus,
             contextSerialize,
             contextUpdate,
             contextMerge,
-            contextQuery);
+            contextQuery,
+            contextReset);
     server.setHandler(contexts);
   }
 

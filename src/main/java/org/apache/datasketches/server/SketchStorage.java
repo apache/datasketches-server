@@ -58,23 +58,26 @@ public class SketchStorage {
     public final Family family;
     public final ValueType type;
     public Object sketch;
+    public int configK;
 
-    SketchEntry(final Family family, final ValueType type, final Object sketch) throws IllegalArgumentException {
+    SketchEntry(final Family family, final ValueType type, final Object sketch, final int configK) throws IllegalArgumentException {
       if (isDistinctCounting(family) && type == null)
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
       this.family = family;
       this.type = type;
       this.sketch = sketch;
+      this.configK = configK;
     }
 
-    SketchEntry(final Family family, final Object sketch) throws IllegalArgumentException {
+    SketchEntry(final Family family, final Object sketch, final int configK) throws IllegalArgumentException {
       if (isDistinctCounting(family))
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
       this.family = family;
       this.type = null;
       this.sketch = sketch;
+      this.configK = configK;
     }
   }
 
@@ -152,33 +155,33 @@ public class SketchStorage {
         case QUICKSELECT:
           // make a Union so we can handle merges later
           sketchEntry = new SketchEntry(Family.UNION, ValueType.stringToType(info.type),
-              new SetOperationBuilder().setNominalEntries(1 << info.k).buildUnion());
+              new SetOperationBuilder().setNominalEntries(1 << info.k).buildUnion(), info.k);
           break;
 
         case HLL:
           sketchEntry = new SketchEntry(Family.HLL, ValueType.stringToType(info.type),
-              new HllSketch(info.k));
+              new HllSketch(info.k), info.k);
           break;
 
         case CPC:
           sketchEntry = new SketchEntry(Family.CPC, ValueType.stringToType(info.type),
-              new CpcSketch(info.k));
+              new CpcSketch(info.k), info.k);
           break;
 
         case KLL:
-          sketchEntry = new SketchEntry(Family.KLL, new KllFloatsSketch(info.k));
+          sketchEntry = new SketchEntry(Family.KLL, new KllFloatsSketch(info.k), info.k);
           break;
 
         case FREQUENCY:
-          sketchEntry = new SketchEntry(Family.FREQUENCY, new ItemsSketch<String>(info.k));
+          sketchEntry = new SketchEntry(Family.FREQUENCY, new ItemsSketch<String>(info.k), info.k);
           break;
 
         case RESERVOIR:
-          sketchEntry = new SketchEntry(Family.RESERVOIR, ReservoirItemsSketch.<String>newInstance(info.k));
+          sketchEntry = new SketchEntry(Family.RESERVOIR, ReservoirItemsSketch.<String>newInstance(info.k), info.k);
           break;
 
         case VAROPT:
-          sketchEntry = new SketchEntry(Family.VAROPT, VarOptItemsSketch.<String>newInstance(info.k));
+          sketchEntry = new SketchEntry(Family.VAROPT, VarOptItemsSketch.<String>newInstance(info.k), info.k);
           break;
       }
 

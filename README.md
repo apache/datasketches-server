@@ -134,6 +134,7 @@ The available calls are:
 * `/query`
 * `/serialize`
 * `/merge`
+* `/reset`
 * `/status`
 
 Each is described below, along with examples of input and output. As noted above, all calls accepting input may
@@ -357,6 +358,22 @@ querying the sketch. Doing so, we can see the expected result (with the sketch s
   "minus3StdDev": 15.0
 }
 ```
+
+### Reset
+
+A call to `/reset` clears the data from the specified sketch(es), allowing them to resume accepting data from a clean
+state. Especially with the server's constraint on defining new sketches, the `/reset` call allows the server to operate
+in an accumulator model, using pre-defined merge targets that can be reset between merge operations.
+
+The syntax of a `/reset` call is simple, as shown in [reset.json][example/reset.json]:
+```json
+{
+    "name": "theta0"
+}
+```
+
+There is no data returned from a call to `/reset`; a status code 200 signifies success.
+
 
 ### Status
 
