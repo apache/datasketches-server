@@ -26,6 +26,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 
 import static org.apache.datasketches.server.SketchConstants.*;
 
@@ -54,7 +55,7 @@ public class SketchServer {
     // Error page unless you have a correct URL
     final ContextHandler contextRoot = new ContextHandler("/");
     contextRoot.setContextPath("/");
-    contextRoot.setHandler(new ErrorHandler());
+    contextRoot.setErrorHandler(new ErrorHandler());
 
     final ContextHandler contextStatus = new ContextHandler(STATUS_PATH);
     contextStatus.setHandler(new StatusHandler(sketches));
