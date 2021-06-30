@@ -54,7 +54,7 @@ public class SketchServer {
     // Error page unless you have a correct URL
     final ContextHandler contextRoot = new ContextHandler("/");
     contextRoot.setContextPath("/");
-    contextRoot.setHandler(new ErrorHandler());
+    contextRoot.setErrorHandler(new ErrorHandler());
 
     final ContextHandler contextStatus = new ContextHandler(STATUS_PATH);
     contextStatus.setHandler(new StatusHandler(sketches));
@@ -71,13 +71,17 @@ public class SketchServer {
     final ContextHandler contextQuery = new ContextHandler(QUERY_PATH);
     contextQuery.setHandler(new DataQueryHandler(sketches));
 
+    final ContextHandler contextReset = new ContextHandler(RESET_PATH);
+    contextReset.setHandler(new ResetHandler(sketches));
+
     final ContextHandlerCollection contexts =
         new ContextHandlerCollection(contextRoot,
             contextStatus,
             contextSerialize,
             contextUpdate,
             contextMerge,
-            contextQuery);
+            contextQuery,
+            contextReset);
     server.setHandler(contexts);
   }
 
