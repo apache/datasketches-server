@@ -76,6 +76,7 @@ public final class SketchConstants {
   public static final String RESPONSE_RESULT_MASS = "mass";
   public static final String RESPONSE_QUANTILE_LIST = "estimatedQuantiles";
   public static final String RESPONSE_RESULT_QUANTILE = "quantile";
+  public static final String RESPONSE_SKETCH_COUNT_FIELD = "count";
 
   // JSON Config Field Names
   public static final String CONFIG_PORT_FIELD = "port";

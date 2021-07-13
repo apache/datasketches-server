@@ -21,6 +21,7 @@ package org.apache.datasketches.server;
 
 import java.io.IOException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -43,7 +44,7 @@ public class SketchServer {
    * @param configFile Path to a configuration file following the <tt>SketchServerConfig</tt> format
    * @throws IOException on parse errors
    */
-  public SketchServer(final String configFile) throws IOException {
+  public SketchServer(@NonNull final String configFile) throws IOException {
     config = new SketchServerConfig(configFile);
   }
 

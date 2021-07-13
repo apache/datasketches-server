@@ -31,6 +31,8 @@ import org.apache.datasketches.kll.KllFloatsSketch;
 import org.apache.datasketches.sampling.ReservoirItemsSketch;
 import org.apache.datasketches.sampling.VarOptItemsSketch;
 import org.apache.datasketches.theta.SetOperationBuilder;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -43,7 +45,8 @@ import static org.apache.datasketches.server.SketchConstants.*;
  * order to ensure that data is presented in a consistent way.
  */
 public class SketchStorage {
-  private static final String SKETCH_COUNT_NAME = "count";
+  // the set of SketchEntries held by this object
+  HashMap<String, SketchEntry> sketchMap;
 
   /**
    * Returns true if the sketch family is for distinct counting.
@@ -81,12 +84,8 @@ public class SketchStorage {
     }
   }
 
-  HashMap<String, SketchEntry> sketchMap;
-
-  SketchStorage(final List<SketchServerConfig.SketchInfo> sketchList) {
-    if (sketchList != null) {
-      createSketches(sketchList);
-    }
+  SketchStorage(@NonNull final List<SketchServerConfig.SketchInfo> sketchList) {
+    createSketches(sketchList);
   }
 
   JsonObject listSketches() {
@@ -125,7 +124,7 @@ public class SketchStorage {
       sketchList.add(item);
     }
 
-    summary.addProperty(SKETCH_COUNT_NAME, sketchMap.size());
+    summary.addProperty(RESPONSE_SKETCH_COUNT_FIELD, sketchMap.size());
     summary.add(SketchConstants.CONFIG_SKETCHES_PREFIX, sketchList); // bare prefix, sketches fully qualified
 
     return summary;
