@@ -37,7 +37,7 @@ public class SketchServerTest {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     SketchServer server = null;
     try {
-      server = new SketchServer(Objects.requireNonNull(classLoader.getResource("test_config.json")).getFile());
+      server = new SketchServer(Objects.requireNonNull(classLoader.getResource("config_with_port.json")).getFile());
     } catch (final IOException e) {
       fail();
     }

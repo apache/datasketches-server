@@ -60,42 +60,47 @@ public class SerializationHandler extends BaseSketchesQueryHandler {
       throw new IllegalArgumentException("Invalid sketch name: " + name);
     }
 
-    final SketchStorage.SketchEntry se = sketches.getSketch(name);
-
     final byte[] bytes;
-    switch (se.family) {
-      case UNION:
-        bytes = ((Union) se.sketch).getResult().toByteArray();
-        break;
-      case KLL:
-        bytes = ((KllFloatsSketch) se.sketch).toByteArray();
-        break;
-      case FREQUENCY:
-        bytes = ((ItemsSketch<String>) se.sketch).toByteArray(new ArrayOfStringsSerDe());
-        break;
-      case HLL:
-        bytes = ((HllSketch) se.sketch).toCompactByteArray();
-        break;
-      case CPC:
-        bytes = ((CpcSketch) se.sketch).toByteArray();
-        break;
-      case RESERVOIR:
-        bytes = ((ReservoirItemsSketch<String>) se.sketch).toByteArray(new ArrayOfStringsSerDe());
-        break;
-      case VAROPT:
-        bytes = ((VarOptItemsSketch<String>) se.sketch).toByteArray(new ArrayOfStringsSerDe());
-        break;
-      default:
-        throw new IllegalStateException("Unexpected value: " + se.family);
+    final SketchStorage.SketchEntry se;
+
+    // need to lock the sketch even when just reading
+    synchronized (name.intern()) {
+      se = sketches.getSketch(name);
+
+      switch (se.family_) {
+        case UNION:
+          bytes = ((Union) se.sketch_).getResult().toByteArray();
+          break;
+        case KLL:
+          bytes = ((KllFloatsSketch) se.sketch_).toByteArray();
+          break;
+        case FREQUENCY:
+          bytes = ((ItemsSketch<String>) se.sketch_).toByteArray(new ArrayOfStringsSerDe());
+          break;
+        case HLL:
+          bytes = ((HllSketch) se.sketch_).toCompactByteArray();
+          break;
+        case CPC:
+          bytes = ((CpcSketch) se.sketch_).toByteArray();
+          break;
+        case RESERVOIR:
+          bytes = ((ReservoirItemsSketch<String>) se.sketch_).toByteArray(new ArrayOfStringsSerDe());
+          break;
+        case VAROPT:
+          bytes = ((VarOptItemsSketch<String>) se.sketch_).toByteArray(new ArrayOfStringsSerDe());
+          break;
+        default:
+          throw new IllegalStateException("Unexpected value: " + se.family_);
+      }
     }
 
     final String b64Sketch = Base64.getUrlEncoder().encodeToString(bytes);
 
     final JsonObject result = new JsonObject();
     result.addProperty(QUERY_NAME_FIELD, name);
-    result.addProperty(CONFIG_FAMILY_FIELD, se.family.getFamilyName());
-    if (se.type != null)
-      result.addProperty(CONFIG_TYPE_FIELD, se.type.getTypeName());
+    result.addProperty(CONFIG_FAMILY_FIELD, se.family_.getFamilyName());
+    if (se.type_ != null)
+      result.addProperty(CONFIG_TYPE_FIELD, se.type_.getTypeName());
     result.addProperty(QUERY_SKETCH_FIELD, b64Sketch);
 
     return result;

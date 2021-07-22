@@ -80,10 +80,12 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         throw new IllegalArgumentException("Attempt to call update with missing name or sketch not found");
       }
 
-      if (data.isJsonArray()) {
-        processBatchUpdate(se, data.getAsJsonArray());
-      } else {
-        processSingleUpdate(se, data);
+      synchronized (name.intern()) {
+        if (data.isJsonArray()) {
+          processBatchUpdate(se, data.getAsJsonArray());
+        } else {
+          processSingleUpdate(se, data);
+        }
       }
     }
 
@@ -94,54 +96,54 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
   @SuppressWarnings("unchecked")
   private static void processBatchUpdate(final SketchStorage.SketchEntry entry,
                                          final JsonArray data) {
-    switch (entry.family) {
+    switch (entry.family_) {
       case UNION: // theta
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch_).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch_).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (final JsonElement e : data) { ((Union) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((Union) entry.sketch_).update(e.getAsString()); }
             break;
         }
         break;
 
       case CPC:
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsString()); }
             break;
         }
         break;
 
       case HLL:
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            for (final JsonElement e : data) { ((HllSketch) entry.sketch).update(e.getAsDouble()); }
+            for (final JsonElement e : data) { ((HllSketch) entry.sketch_).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsString()); }
             break;
         }
         break;
 
       case KLL:
-        for (final JsonElement e : data) { ((KllFloatsSketch) entry.sketch).update(e.getAsFloat()); }
+        for (final JsonElement e : data) { ((KllFloatsSketch) entry.sketch_).update(e.getAsFloat()); }
         break;
 
       case FREQUENCY:
@@ -154,15 +156,15 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
             }
             final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
             final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
-            ((ItemsSketch<String>) entry.sketch).update(item, weight);
+            ((ItemsSketch<String>) entry.sketch_).update(item, weight);
           } else {
-            ((ItemsSketch<String>) entry.sketch).update(e.getAsString());
+            ((ItemsSketch<String>) entry.sketch_).update(e.getAsString());
           }
         }
         break;
 
       case RESERVOIR:
-        for (final JsonElement e : data) { ((ReservoirItemsSketch<String>) entry.sketch).update(e.getAsString()); }
+        for (final JsonElement e : data) { ((ReservoirItemsSketch<String>) entry.sketch_).update(e.getAsString()); }
         break;
 
       case VAROPT:
@@ -175,69 +177,69 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
             }
             final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
             final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
-            ((VarOptItemsSketch<String>) entry.sketch).update(item, weight);
+            ((VarOptItemsSketch<String>) entry.sketch_).update(item, weight);
           } else {
-            ((VarOptItemsSketch<String>) entry.sketch).update(e.getAsString(), 1.0);
+            ((VarOptItemsSketch<String>) entry.sketch_).update(e.getAsString(), 1.0);
           }
         }
         break;
 
       default:
-        throw new IllegalArgumentException("Unsupported sketch type: " + entry.family);
+        throw new IllegalArgumentException("Unsupported sketch type: " + entry.family_);
     }
   }
 
   @SuppressWarnings("unchecked")
   private static void processSingleUpdate(final SketchStorage.SketchEntry entry,
                                           final JsonElement data) {
-    switch (entry.family) {
+    switch (entry.family_) {
       case UNION:
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            ((Union) entry.sketch).update(data.getAsDouble());
+            ((Union) entry.sketch_).update(data.getAsDouble());
             break;
           case INT: case LONG:
-            ((Union) entry.sketch).update(data.getAsLong());
+            ((Union) entry.sketch_).update(data.getAsLong());
             break;
           case STRING: default:
-            ((Union) entry.sketch).update(data.getAsString());
+            ((Union) entry.sketch_).update(data.getAsString());
             break;
         }
         break;
 
       case CPC:
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            ((CpcSketch) entry.sketch).update(data.getAsDouble());
+            ((CpcSketch) entry.sketch_).update(data.getAsDouble());
             break;
           case INT: case LONG:
-            ((CpcSketch) entry.sketch).update(data.getAsLong());
+            ((CpcSketch) entry.sketch_).update(data.getAsLong());
             break;
           case STRING: default:
-            ((CpcSketch) entry.sketch).update(data.getAsString());
+            ((CpcSketch) entry.sketch_).update(data.getAsString());
             break;
         }
         break;
 
       case HLL:
-        assert(entry.type != null);
-        switch (entry.type) {
+        assert(entry.type_ != null);
+        switch (entry.type_) {
           case FLOAT: case DOUBLE:
-            ((HllSketch) entry.sketch).update(data.getAsDouble());
+            ((HllSketch) entry.sketch_).update(data.getAsDouble());
             break;
           case INT: case LONG:
-            ((HllSketch) entry.sketch).update(data.getAsLong());
+            ((HllSketch) entry.sketch_).update(data.getAsLong());
             break;
           case STRING: default:
-            ((HllSketch) entry.sketch).update(data.getAsString());
+            ((HllSketch) entry.sketch_).update(data.getAsString());
             break;
         }
         break;
 
       case KLL:
-        ((KllFloatsSketch) entry.sketch).update(data.getAsFloat());
+        ((KllFloatsSketch) entry.sketch_).update(data.getAsFloat());
         break;
 
       case FREQUENCY:
@@ -249,14 +251,14 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
           }
           final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
           final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
-          ((ItemsSketch<String>) entry.sketch).update(item, weight);
+          ((ItemsSketch<String>) entry.sketch_).update(item, weight);
         } else {
-          ((ItemsSketch<String>) entry.sketch).update(data.getAsString());
+          ((ItemsSketch<String>) entry.sketch_).update(data.getAsString());
         }
         break;
 
       case RESERVOIR:
-        ((ReservoirItemsSketch<String>) entry.sketch).update(data.getAsString());
+        ((ReservoirItemsSketch<String>) entry.sketch_).update(data.getAsString());
         break;
 
       case VAROPT:
@@ -268,14 +270,14 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
           }
           final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
           final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
-          ((VarOptItemsSketch<String>) entry.sketch).update(item, weight);
+          ((VarOptItemsSketch<String>) entry.sketch_).update(item, weight);
         } else {
-          ((VarOptItemsSketch<String>) entry.sketch).update(data.getAsString(), 1.0);
+          ((VarOptItemsSketch<String>) entry.sketch_).update(data.getAsString(), 1.0);
         }
         break;
 
       default:
-        throw new IllegalArgumentException("Unsupported sketch type: " + entry.family);
+        throw new IllegalArgumentException("Unsupported sketch type: " + entry.family_);
     }
   }
 

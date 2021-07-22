@@ -70,7 +70,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     assertTrue(element.isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
-    final CpcSketch sk = (CpcSketch) entry.sketch;
+    final CpcSketch sk = (CpcSketch) entry.sketch_;
     assertEquals(sk.getEstimate(), 2 * nPoints, 2 * nPoints * 1e-2);
   }
 
@@ -108,7 +108,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     assertTrue(element.isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
-    final org.apache.datasketches.frequencies.ItemsSketch<String> sk = (org.apache.datasketches.frequencies.ItemsSketch<String>) entry.sketch;
+    final org.apache.datasketches.frequencies.ItemsSketch<String> sk = (org.apache.datasketches.frequencies.ItemsSketch<String>) entry.sketch_;
     assertEquals(sk.getEstimate("item1"), 2);
     assertEquals(sk.getEstimate("item2"), 5);
     assertEquals(sk.getEstimate("item3"), 10);

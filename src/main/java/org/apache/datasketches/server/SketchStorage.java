@@ -58,29 +58,39 @@ public class SketchStorage {
   }
 
   static class SketchEntry {
-    public final Family family;
-    public final ValueType type;
-    public Object sketch;
-    public int configK;
+    public final Family family_;
+    public final ValueType type_;
+    public Object sketch_;
+    public final String name_;
+    public int configK_;
 
-    SketchEntry(final Family family, final ValueType type, final Object sketch, final int configK) throws IllegalArgumentException {
+    SketchEntry(@NonNull final Family family,
+                final ValueType type,
+                @NonNull final Object sketch,
+                @NonNull final String name,
+                final int configK) throws IllegalArgumentException {
       if (isDistinctCounting(family) && type == null)
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
-      this.family = family;
-      this.type = type;
-      this.sketch = sketch;
-      this.configK = configK;
+      family_ = family;
+      type_ = type;
+      sketch_ = sketch;
+      name_ = name;
+      configK_ = configK;
     }
 
-    SketchEntry(final Family family, final Object sketch, final int configK) throws IllegalArgumentException {
+    SketchEntry(@NonNull final Family family,
+                @NonNull final Object sketch,
+                @NonNull final String name,
+                final int configK) throws IllegalArgumentException {
       if (isDistinctCounting(family))
         throw new IllegalArgumentException("Must specify a value type for distinct counting sketches");
 
-      this.family = family;
-      this.type = null;
-      this.sketch = sketch;
-      this.configK = configK;
+      family_ = family;
+      type_ = null;
+      sketch_ = sketch;
+      name_ = name;
+      configK_ = configK;
     }
   }
 
@@ -95,17 +105,17 @@ public class SketchStorage {
     for (final Map.Entry<String, SketchEntry> e : sketchMap.entrySet()) {
       final JsonObject item = new JsonObject();
       item.addProperty(CONFIG_SKETCH_NAME_FIELD, e.getKey());
-      switch (e.getValue().family) {
+      switch (e.getValue().family_) {
         case UNION:
-          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type.getTypeName());
+          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type_.getTypeName());
           item.addProperty(CONFIG_FAMILY_FIELD, SKETCH_FAMILY_THETA);
           break;
         case CPC:
-          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type.getTypeName());
+          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type_.getTypeName());
           item.addProperty(CONFIG_FAMILY_FIELD, SKETCH_FAMILY_CPC);
           break;
         case HLL:
-          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type.getTypeName());
+          item.addProperty(CONFIG_TYPE_FIELD, e.getValue().type_.getTypeName());
           item.addProperty(CONFIG_FAMILY_FIELD, SKETCH_FAMILY_HLL);
           break;
         case FREQUENCY:
@@ -149,38 +159,39 @@ public class SketchStorage {
 
       SketchEntry sketchEntry = null;
       final Family family = BaseSketchesQueryHandler.familyFromString(info.family);
+      final int k = info.k; // to reduce derferences in code later
 
       switch (family) {
         case QUICKSELECT:
           // make a Union so we can handle merges later
           sketchEntry = new SketchEntry(Family.UNION, ValueType.stringToType(info.type),
-              new SetOperationBuilder().setNominalEntries(1 << info.k).buildUnion(), info.k);
+              new SetOperationBuilder().setNominalEntries(1 << k).buildUnion(), info.name, k);
           break;
 
         case HLL:
           sketchEntry = new SketchEntry(Family.HLL, ValueType.stringToType(info.type),
-              new HllSketch(info.k), info.k);
+              new HllSketch(k), info.name, k);
           break;
 
         case CPC:
           sketchEntry = new SketchEntry(Family.CPC, ValueType.stringToType(info.type),
-              new CpcSketch(info.k), info.k);
+              new CpcSketch(k), info.name, k);
           break;
 
         case KLL:
-          sketchEntry = new SketchEntry(Family.KLL, new KllFloatsSketch(info.k), info.k);
+          sketchEntry = new SketchEntry(Family.KLL, new KllFloatsSketch(k), info.name, k);
           break;
 
         case FREQUENCY:
-          sketchEntry = new SketchEntry(Family.FREQUENCY, new ItemsSketch<String>(info.k), info.k);
+          sketchEntry = new SketchEntry(Family.FREQUENCY, new ItemsSketch<String>(k), info.name, k);
           break;
 
         case RESERVOIR:
-          sketchEntry = new SketchEntry(Family.RESERVOIR, ReservoirItemsSketch.<String>newInstance(info.k), info.k);
+          sketchEntry = new SketchEntry(Family.RESERVOIR, ReservoirItemsSketch.<String>newInstance(k), info.name, k);
           break;
 
         case VAROPT:
-          sketchEntry = new SketchEntry(Family.VAROPT, VarOptItemsSketch.<String>newInstance(info.k), info.k);
+          sketchEntry = new SketchEntry(Family.VAROPT, VarOptItemsSketch.<String>newInstance(k), info.name, k);
           break;
       }
 

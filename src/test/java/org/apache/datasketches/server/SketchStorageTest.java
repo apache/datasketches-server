@@ -41,14 +41,14 @@ public class SketchStorageTest {
   @Test
   public void invalidSketchEntry() {
     try {
-      new SketchStorage.SketchEntry(Family.CPC, null, new CpcSketch(12), 12);
+      new SketchStorage.SketchEntry(Family.CPC, null, new CpcSketch(12), "cpcSketch", 12);
       fail();
     } catch (IllegalArgumentException e) {
       // expected
     }
 
     try {
-      new SketchStorage.SketchEntry(Family.HLL, new HllSketch(10), 10);
+      new SketchStorage.SketchEntry(Family.HLL, new HllSketch(10), "hllSketch", 10);
       fail();
     } catch (IllegalArgumentException e) {
       // expected

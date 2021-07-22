@@ -108,7 +108,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * @param query A JSON query to process
    * @return A JSON response
    */
-  final synchronized JsonObject callProcessQuery(final JsonObject query) {
+  final JsonObject callProcessQuery(final JsonObject query) {
     return processQuery(query);
   }
 
