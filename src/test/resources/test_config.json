@@ -1,5 +1,5 @@
 {
-    "port": 8080,
+	"port": 0,
     "sketches_A": [
 	{ "name": "cpcOfNumbers",
 	  "k": 12,
@@ -10,7 +10,7 @@
 	  "k": 14,
 	  "type": "string",
 	  "family": "cpc"
-	}	
+	}
     ],
     "set1": {
 	"family": "hll",

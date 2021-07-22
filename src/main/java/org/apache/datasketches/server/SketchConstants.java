@@ -21,12 +21,12 @@ package org.apache.datasketches.server;
 
 public final class SketchConstants {
   // API call paths, relative to root
-  public static final String UPDATE_PATH = "/update";
-  public static final String SERIALIZE_PATH = "/serialize";
-  public static final String STATUS_PATH = "/status";
-  public static final String QUERY_PATH = "/query";
-  public static final String MERGE_PATH = "/merge";
-  public static final String RESET_PATH = "/reset";
+  public static final String UPDATE_PATH = "update";
+  public static final String SERIALIZE_PATH = "serialize";
+  public static final String STATUS_PATH = "status";
+  public static final String QUERY_PATH = "query";
+  public static final String MERGE_PATH = "merge";
+  public static final String RESET_PATH = "reset";
 
   // JSON Query/Update/Merge Field Names
   public static final String QUERY_NAME_FIELD = "name";

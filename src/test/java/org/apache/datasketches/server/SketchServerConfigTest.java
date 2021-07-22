@@ -45,8 +45,8 @@ public class SketchServerConfigTest {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     try {
       final SketchServerConfig serverConf =
-          new SketchServerConfig(Objects.requireNonNull(classLoader.getResource("test_config.json")).getFile());
-      assertEquals(serverConf.getSketchList().size(), 15);
+          new SketchServerConfig(Objects.requireNonNull(classLoader.getResource("config_with_port.json")).getFile());
+      assertEquals(serverConf.getSketchList().size(), 2);
       assertEquals(serverConf.getPort(), 8080);
     } catch (final IOException e) {
       fail();

@@ -20,6 +20,7 @@
 package org.apache.datasketches.server;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -43,17 +44,23 @@ public class SketchServerTest {
 
     // check that port and URI are invalid before starting the server
     assertNotNull(server);
+    assertFalse(server.isRunning());
     assertNull(server.getURI());
     assertEquals(server.getPort(), -1);
     try {
       server.start();
+      assertTrue(server.isRunning());
+
+      // add the few tests in the try block for code simplicity
+      assertEquals(server.getPort(), 8080);
+      // initial testing suggests it's just using the host's IP address so just checking that the port
+      // is working correctly
+      assertTrue(server.getURI().endsWith(":" + server.getPort() + "/"));
+
+      server.stop();
+      assertFalse(server.isRunning());
     } catch (final Exception e) {
       fail();
     }
-
-    assertEquals(server.getPort(), 8080);
-    // initial testing suggests it's just using the host's IP address so just checking that the port
-    // is working correctly
-    assertTrue(server.getURI().endsWith(":" + server.getPort() + "/"));
   }
 }
