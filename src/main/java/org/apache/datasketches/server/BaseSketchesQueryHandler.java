@@ -103,15 +103,6 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    */
   protected abstract JsonObject processQuery(JsonObject query);
 
-  /**
-   * Internal method to synchronize calls to subclasses
-   * @param query A JSON query to process
-   * @return A JSON response
-   */
-  final JsonObject callProcessQuery(final JsonObject query) {
-    return processQuery(query);
-  }
-
   @Override
   public void handle(final String target,
                      final Request baseRequest,
@@ -130,10 +121,10 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
 
     try {
       if (query == null) {
-        result = callProcessQuery(null);
+        result = processQuery(null);
       } else if (query.isJsonArray()) {
         for (final JsonElement subQuery : query.getAsJsonArray()) {
-          final JsonObject subResult = callProcessQuery(subQuery.getAsJsonObject());
+          final JsonObject subResult = processQuery(subQuery.getAsJsonObject());
           if (subResult != null) {
             // lazy initialization to avoid possibly empty array
             if (result == null) {
@@ -143,7 +134,8 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
           }
         }
       } else {
-        result = callProcessQuery((JsonObject) query);
+        //result = callProcessQuery((JsonObject) query);
+        result = processQuery((JsonObject) query);
       }
 
       if (result != null) {
