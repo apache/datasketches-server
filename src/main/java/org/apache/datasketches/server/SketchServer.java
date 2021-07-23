@@ -21,6 +21,7 @@ package org.apache.datasketches.server;
 
 import java.io.IOException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -43,36 +44,48 @@ public class SketchServer {
    * @param configFile Path to a configuration file following the <tt>SketchServerConfig</tt> format
    * @throws IOException on parse errors
    */
-  public SketchServer(final String configFile) throws IOException {
+  public SketchServer(@NonNull final String configFile) throws IOException {
     config = new SketchServerConfig(configFile);
   }
 
   // defines paths and registers the relevant handlers
   private void createServer() {
-    server = new Server(config.getPort());
+    server = new Server();
+
+    // configure port
+    final ServerConnector http = new ServerConnector(server);
+    http.setHost("localhost");
+    http.setPort(config.getPort());
+    server.addConnector(http);
 
     // Error page unless you have a correct URL
     final ContextHandler contextRoot = new ContextHandler("/");
-    contextRoot.setContextPath("/");
     contextRoot.setErrorHandler(new ErrorHandler());
 
-    final ContextHandler contextStatus = new ContextHandler(STATUS_PATH);
+    // Add specific handlers
+    final ContextHandler contextStatus = new ContextHandler("/" + STATUS_PATH);
     contextStatus.setHandler(new StatusHandler(sketches));
+    contextStatus.setAllowNullPathInfo(true);
 
-    final ContextHandler contextSerialize = new ContextHandler(SERIALIZE_PATH);
+    final ContextHandler contextSerialize = new ContextHandler("/" + SERIALIZE_PATH);
     contextSerialize.setHandler(new SerializationHandler(sketches));
+    contextSerialize.setAllowNullPathInfo(true);
 
-    final ContextHandler contextUpdate = new ContextHandler(UPDATE_PATH);
+    final ContextHandler contextUpdate = new ContextHandler("/" + UPDATE_PATH);
     contextUpdate.setHandler(new UpdateHandler(sketches));
+    contextUpdate.setAllowNullPathInfo(true);
 
-    final ContextHandler contextMerge = new ContextHandler(MERGE_PATH);
+    final ContextHandler contextMerge = new ContextHandler("/" + MERGE_PATH);
     contextMerge.setHandler(new MergeHandler(sketches));
+    contextMerge.setAllowNullPathInfo(true);
 
-    final ContextHandler contextQuery = new ContextHandler(QUERY_PATH);
+    final ContextHandler contextQuery = new ContextHandler("/" + QUERY_PATH);
     contextQuery.setHandler(new DataQueryHandler(sketches));
+    contextQuery.setAllowNullPathInfo(true);
 
-    final ContextHandler contextReset = new ContextHandler(RESET_PATH);
+    final ContextHandler contextReset = new ContextHandler("/" + RESET_PATH);
     contextReset.setHandler(new ResetHandler(sketches));
+    contextReset.setAllowNullPathInfo(true);
 
     final ContextHandlerCollection contexts =
         new ContextHandlerCollection(contextRoot,
@@ -114,6 +127,34 @@ public class SketchServer {
       return ((ServerConnector) server.getConnectors()[0]).getLocalPort();
     }
     return -1;
+  }
+
+  /**
+   * Returns the server's running status
+   * @return True for a running server, otherwise false
+   */
+  public boolean isRunning() {
+    return server != null && server.isRunning();
+  }
+
+  /**
+   * Stops the server from running. Cannot be be restarted without creating new sketches.
+   * @throws Exception Upon underlying server throwing an Exception
+   */
+  public void stop() throws Exception {
+    if (server != null) {
+      server.stop();
+      server.isStarted();
+    }
+  }
+
+  /**
+   * Package-private test method to get a specific SketchEntry
+   * @param name The name of the desired sketch
+   * @return The SketchEntry containing the sketch and type info
+   */
+  SketchStorage.SketchEntry getSketch(@NonNull final String name) {
+    return sketches.getSketch(name);
   }
 
   public static void main(final String[] args) throws Exception {

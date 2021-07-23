@@ -59,35 +59,39 @@ public class DataQueryHandler extends BaseSketchesQueryHandler {
       throw new IllegalArgumentException("Invalid sketch name: " + key);
     }
 
-    final SketchStorage.SketchEntry se = sketches.getSketch(key);
     JsonObject result = new JsonObject();
 
-    // pre-populate with the sketch name, but may be overwritten with
-    // null depending on the queyr
-    result.addProperty(QUERY_NAME_FIELD, key);
+    // we do need to lock the sketch even for query processing
+    synchronized (key.intern()) {
+      final SketchStorage.SketchEntry se = sketches.getSketch(key);
 
-    switch (se.family) {
-      case UNION:
-      case HLL:
-      case CPC:
-        result = processDistinctQuery(result, query, se.family, se.sketch);
-        break;
+      // pre-populate with the sketch name, but may be overwritten with
+      // null depending on the query
+      result.addProperty(QUERY_NAME_FIELD, key);
 
-      case KLL:
-        result = processQuantilesQuery(result, query, se.family, se.sketch);
-        break;
+      switch (se.family_) {
+        case UNION:
+        case HLL:
+        case CPC:
+          result = processDistinctQuery(result, query, se.family_, se.sketch_);
+          break;
 
-      case FREQUENCY:
-        result = processFrequencyQuery(result, query, se.family, se.sketch);
-        break;
+        case KLL:
+          result = processQuantilesQuery(result, query, se.family_, se.sketch_);
+          break;
 
-      case RESERVOIR:
-      case VAROPT:
-        result = processSamplingQuery(result, query, se.family, se.sketch);
-        break;
+        case FREQUENCY:
+          result = processFrequencyQuery(result, query, se.family_, se.sketch_);
+          break;
 
-      default:
-        throw new IllegalStateException("Unexpected sketch family: " + se.family);
+        case RESERVOIR:
+        case VAROPT:
+          result = processSamplingQuery(result, query, se.family_, se.sketch_);
+          break;
+
+        default:
+          throw new IllegalStateException("Unexpected sketch family: " + se.family_);
+      }
     }
 
     return result;

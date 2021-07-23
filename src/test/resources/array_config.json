@@ -1,0 +1,12 @@
+[
+  { "name": "cpcOfNumbers",
+    "k": 12,
+    "type": "long",
+    "family": "cpc"
+  },
+  { "name": "cpcOfStrings",
+    "k": 14,
+    "type": "string",
+    "family": "cpc"
+  }
+]

@@ -24,6 +24,7 @@ import static org.apache.datasketches.server.SketchStorage.isDistinctCounting;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import static org.apache.datasketches.server.SketchConstants.*;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * A class to hold the server configuration, along with a supporting subclass and file-parsing methods.
@@ -54,22 +57,13 @@ class SketchServerConfig {
       this.family = family;
       this.type = type;
     }
-
-    SketchInfo(final String name, final int k, final String family) {
-      this(name, k, family, null);
-    }
-
   }
 
   private int port = DEFAULT_PORT;
   private ArrayList<SketchInfo> sketchList;
 
-  SketchServerConfig(final String configFile) throws IOException {
+  SketchServerConfig(@NonNull final String configFile) throws IOException {
     final JsonElement config = readJsonFromFile(configFile);
-    parseConfig(config);
-  }
-
-  SketchServerConfig(final JsonElement config) throws IOException {
     parseConfig(config);
   }
 
@@ -83,16 +77,10 @@ class SketchServerConfig {
 
   // output should have a list with full info per sketch, even if input allows a
   // more condensed format
-  private static JsonElement readJsonFromFile(final String configFile) {
-    JsonElement config = null;
-
-    try (final Reader reader = Files.newBufferedReader(Paths.get(configFile))) {
-      config = JsonParser.parseReader(reader);
-    } catch (final IOException e) {
-      e.printStackTrace();
-    }
-
-    return config;
+  private static JsonElement readJsonFromFile(final String configFile) throws IOException {
+    final Path configPath = Paths.get(configFile);
+    final Reader reader = Files.newBufferedReader(configPath);
+    return JsonParser.parseReader(reader);
   }
 
   private void parseConfig(final JsonElement config) throws IOException {

@@ -1,20 +1,20 @@
 {
-    "port": 8080,
-    "bookstoreSketches": [
-	{ "name": "cpc_int",
+	"port": 0,
+    "sketches_A": [
+	{ "name": "cpcOfNumbers",
 	  "k": 12,
-	  "type": "int",
+	  "type": "long",
 	  "family": "cpc"
 	},
-	{ "name": "cpc_string",
-	  "k": 12,
+	{ "name": "cpcOfStrings",
+	  "k": 14,
 	  "type": "string",
 	  "family": "cpc"
-	}	
+	}
     ],
-    "bookGenreDurationSet": {
+    "set1": {
 	"family": "hll",
-	"type": "double",
+	"type": "string",
 	"k": 14,
 	"names": [
 	    "hll1",
@@ -26,7 +26,7 @@
     "set2": {
 	"k": 12,
 	"family": "theta",
-	"type": "float",
+	"type": "int",
 	"names": [
 	    "theta0",
 	    "theta1",
@@ -36,16 +36,11 @@
 	]
     },
     "sketches_B": [
-	{ "name": "kll",
+	{ "name": "duration",
 	  "k": "160",
 	  "family": "kll"
 	},
-	{ "name": "cpc",
-	  "k": "14",
-	  "type": "string",
-	  "family": "cpc"
-	},
-	{ "name": "fi",
+	{ "name": "topItems",
 	  "k": "128",
 	  "family": "frequency"
 	},
@@ -59,4 +54,3 @@
 	}	
     ]
 }
-	

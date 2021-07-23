@@ -50,30 +50,32 @@ public class ResetHandler extends BaseSketchesQueryHandler {
       throw new IllegalArgumentException("Invalid sketch name: " + key);
     }
 
-    final SketchStorage.SketchEntry se = sketches.getSketch(key);
+    synchronized (key.intern()) {
+      final SketchStorage.SketchEntry se = sketches.getSketch(key);
 
-    switch (se.family) {
-      case UNION:
-         ((Union) se.sketch).reset();
-        break;
-      case KLL:
-        se.sketch = new KllFloatsSketch(se.configK);
-        break;
-      case FREQUENCY:
-        ((ItemsSketch<String>) se.sketch).reset();
-        break;
-      case HLL:
-        ((HllSketch) se.sketch).reset();
-        break;
-      case CPC:
-        ((CpcSketch) se.sketch).reset();
-        break;
-      case RESERVOIR:
-        ((ReservoirItemsSketch<String>) se.sketch).reset();
-        break;
-      case VAROPT:
-        ((VarOptItemsSketch<String>) se.sketch).reset();
-        break;
+      switch (se.family_) {
+        case UNION:
+          ((Union) se.sketch_).reset();
+          break;
+        case KLL:
+          se.sketch_ = new KllFloatsSketch(se.configK_);
+          break;
+        case FREQUENCY:
+          ((ItemsSketch<String>) se.sketch_).reset();
+          break;
+        case HLL:
+          ((HllSketch) se.sketch_).reset();
+          break;
+        case CPC:
+          ((CpcSketch) se.sketch_).reset();
+          break;
+        case RESERVOIR:
+          ((ReservoirItemsSketch<String>) se.sketch_).reset();
+          break;
+        case VAROPT:
+          ((VarOptItemsSketch<String>) se.sketch_).reset();
+          break;
+      }
     }
 
     // nothing to return from reset calls
