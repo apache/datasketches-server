@@ -10,9 +10,22 @@ is on ease-of-use rather than speed.
 The repository is still in an early state and lacks both unit tests and
 robust documentation.
 
+## Installation and Running
+
+The server requires Java 8. There is no pre-built jar currently, so the server must be built
+locally. Running `mvn package` will download the relevant dependencies, including the
+DataSketches Java library and the Jetty web server. Once built, a stand-alone server is launched
+by running
+```
+java -cp <path_to_jar> org.apache.datasketches.server.SketchServer <json_config_file>
+```
+where the most convenient option will likely be the jar-with-dependencies. The configuration
+file format is described below.
+
+
 ## Interaction
 
-Configuration and interaction with the server are done via JSON. We will
+Configuration and interaction with the server happen via JSON. We will
 demonstrate the main features of the server by creating a simple configuration
 and using that for some example requests and responses.
 
@@ -21,7 +34,7 @@ a JSON Array. Also, the server does not implement a transactional database. In t
 of an error partway through an array the server will return an error, but the
 effects of any requests processed up to that point will be retained.
 
-JSON input may be passed in via either POST or GET.
+The server accepts JSON input presented via either POST or GET.
 
 
 ### Sketch Families
