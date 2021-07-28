@@ -19,6 +19,7 @@
 
 package org.apache.datasketches.server;
 
+import static org.apache.datasketches.server.BaseSketchesQueryHandler.familyFromString;
 import static org.apache.datasketches.server.SketchStorage.isDistinctCounting;
 
 import java.io.IOException;
@@ -51,11 +52,19 @@ class SketchServerConfig {
     public String family;
     public String type;
 
-    SketchInfo(final String name, final int k, final String family, final String type) {
+    SketchInfo(@NonNull final String name, final int k, @NonNull final String family, final String type) {
       this.name = name;
       this.k = k;
       this.family = family;
       this.type = type;
+    }
+
+    @Override
+    public String toString() {
+      return "Name  : " + name + "\n" +
+          "k     : " + k + "\n" +
+          "Family: " + family + "\n" +
+          "Type  : " + type + "\n";
     }
   }
 
@@ -83,6 +92,24 @@ class SketchServerConfig {
     return JsonParser.parseReader(reader);
   }
 
+  private String validateSketchInfo() {
+    final StringBuilder sb = new StringBuilder();
+
+    for (final SketchInfo info : sketchList) {
+      if (info.name == null) {
+        sb.append("Missing sketch name: ").append(new Gson().toJson(info)).append("\n");
+      } else if (info.k == 0) { // primitive so cannot be null
+        sb.append("Missing k parameter: ").append(new Gson().toJson(info)).append("\n");
+      } else if (info.family == null) {
+        sb.append("Missing sketch family: ").append(new Gson().toJson(info)).append("\n");
+      } else if (isDistinctCounting(familyFromString(info.family)) && info.type == null) {
+        sb.append("Missing value type: ").append(new Gson().toJson(info)).append("\n");
+      }
+    }
+
+    return sb.length() == 0 ? null : sb.toString();
+  }
+
   private void parseConfig(final JsonElement config) throws IOException {
     final Gson gson = new Gson();
 
@@ -104,10 +131,21 @@ class SketchServerConfig {
         } else if (name.toLowerCase().startsWith(CONFIG_SET_PREFIX)) {
           // set* has a common name and type with an array of name names
           final JsonObject sketchSetInfo = confEntry.get(name).getAsJsonObject();
+          if (!sketchSetInfo.has(CONFIG_K_FIELD)) {
+            throw new IOException("Missing field: \"" + CONFIG_K_FIELD + " \": " + sketchSetInfo);
+          }
           final int k = sketchSetInfo.get(CONFIG_K_FIELD).getAsInt();
+
+          if (!sketchSetInfo.has(CONFIG_FAMILY_FIELD)) {
+            throw new IOException("Missing field: \"" + CONFIG_FAMILY_FIELD + " \": " + sketchSetInfo);
+          }
           final String family = sketchSetInfo.get(CONFIG_FAMILY_FIELD).getAsString();
+
           String type = null;
-          if (isDistinctCounting(BaseSketchesQueryHandler.familyFromString(family))) {
+          if (isDistinctCounting(familyFromString(family))) {
+            if (!sketchSetInfo.has(CONFIG_TYPE_FIELD)) {
+              throw new IOException("Missing field: \"" + CONFIG_TYPE_FIELD + " \": " + sketchSetInfo);
+            }
             type = sketchSetInfo.get(CONFIG_TYPE_FIELD).getAsString();
           }
           final String[] nameList = gson.fromJson(sketchSetInfo.get(CONFIG_SET_NAMES_FIELD).getAsJsonArray(), String[].class);
@@ -118,6 +156,11 @@ class SketchServerConfig {
       }
     } else {
       throw new IOException("Expected JsonArray or JsonObject but none found");
+    }
+
+    final String validation = validateSketchInfo();
+    if (validation != null) {
+      throw new IllegalArgumentException(validation);
     }
   }
 }

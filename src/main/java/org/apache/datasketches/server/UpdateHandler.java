@@ -32,6 +32,8 @@ import org.apache.datasketches.theta.Union;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import sun.security.acl.AclEntryImpl;
+
 
 import static org.apache.datasketches.server.SketchConstants.*;
 
@@ -76,8 +78,8 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
       final SketchStorage.SketchEntry se = sketches.getSketch(name);
       final JsonElement data = entry.getValue();
 
-      if (name == null || se == null || data == null) {
-        throw new IllegalArgumentException("Attempt to call update with missing name or sketch not found");
+      if (se == null || data == null) {
+        throw new IllegalArgumentException("Sketch not found or update with no data value(s)");
       }
 
       synchronized (name.intern()) {
@@ -98,7 +100,6 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
                                          final JsonArray data) {
     switch (entry.family_) {
       case UNION: // theta
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             for (final JsonElement e : data) { ((Union) entry.sketch_).update(e.getAsDouble()); }
@@ -113,7 +114,6 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case CPC:
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsDouble()); }
@@ -128,16 +128,15 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case HLL:
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             for (final JsonElement e : data) { ((HllSketch) entry.sketch_).update(e.getAsDouble()); }
             break;
           case INT: case LONG:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsLong()); }
+            for (final JsonElement e : data) { ((HllSketch) entry.sketch_).update(e.getAsLong()); }
             break;
           case STRING: default:
-            for (final JsonElement e : data) { ((CpcSketch) entry.sketch_).update(e.getAsString()); }
+            for (final JsonElement e : data) { ((HllSketch) entry.sketch_).update(e.getAsString()); }
             break;
         }
         break;
@@ -148,18 +147,7 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
 
       case FREQUENCY:
         for (final JsonElement e : data) {
-          if (e.isJsonObject()) {
-            final JsonObject inputPair = e.getAsJsonObject();
-            if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
-              throw new IllegalArgumentException("Frequent Items input pairs must include both "
-                  + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
-            }
-            final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-            final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
-            ((ItemsSketch<String>) entry.sketch_).update(item, weight);
-          } else {
-            ((ItemsSketch<String>) entry.sketch_).update(e.getAsString());
-          }
+          applyFrequentItemsUpdate((ItemsSketch<String>) entry.sketch_, e);
         }
         break;
 
@@ -169,18 +157,7 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
 
       case VAROPT:
         for (final JsonElement e : data) {
-          if (e.isJsonObject()) {
-            final JsonObject inputPair = e.getAsJsonObject();
-            if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
-              throw new IllegalArgumentException("VarOpt input pairs must include both "
-                  + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
-            }
-            final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-            final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
-            ((VarOptItemsSketch<String>) entry.sketch_).update(item, weight);
-          } else {
-            ((VarOptItemsSketch<String>) entry.sketch_).update(e.getAsString(), 1.0);
-          }
+          applyVarOptUpdate((VarOptItemsSketch<String>) entry.sketch_, e);
         }
         break;
 
@@ -194,7 +171,6 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
                                           final JsonElement data) {
     switch (entry.family_) {
       case UNION:
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             ((Union) entry.sketch_).update(data.getAsDouble());
@@ -209,7 +185,6 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case CPC:
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             ((CpcSketch) entry.sketch_).update(data.getAsDouble());
@@ -224,7 +199,6 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case HLL:
-        assert(entry.type_ != null);
         switch (entry.type_) {
           case FLOAT: case DOUBLE:
             ((HllSketch) entry.sketch_).update(data.getAsDouble());
@@ -243,18 +217,7 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case FREQUENCY:
-        if (data.isJsonObject()) {
-          final JsonObject inputPair = data.getAsJsonObject();
-          if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
-            throw new IllegalArgumentException("Frequent Items input pairs must include both "
-                + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
-          }
-          final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-          final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
-          ((ItemsSketch<String>) entry.sketch_).update(item, weight);
-        } else {
-          ((ItemsSketch<String>) entry.sketch_).update(data.getAsString());
-        }
+        applyFrequentItemsUpdate((ItemsSketch<String>) entry.sketch_, data);
         break;
 
       case RESERVOIR:
@@ -262,18 +225,7 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
         break;
 
       case VAROPT:
-        if (data.isJsonObject()) {
-          final JsonObject inputPair = data.getAsJsonObject();
-          if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
-            throw new IllegalArgumentException("VarOpt input pairs must include both "
-                + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
-          }
-          final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
-          final double weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsDouble();
-          ((VarOptItemsSketch<String>) entry.sketch_).update(item, weight);
-        } else {
-          ((VarOptItemsSketch<String>) entry.sketch_).update(data.getAsString(), 1.0);
-        }
+        applyVarOptUpdate((VarOptItemsSketch<String>) entry.sketch_, data);
         break;
 
       default:
@@ -281,5 +233,45 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
     }
   }
 
+  /**
+   * Handles simple item and (item, weight) pairs for FrequentItems updates
+   * @param fiSketch The frequent items sketch to receive the update
+   * @param data The JSON data, whether an raw value or object
+   */
+  private static void applyFrequentItemsUpdate(final ItemsSketch<String> fiSketch, final JsonElement data) {
+    if (data.isJsonObject()) {
+      final JsonObject inputPair = data.getAsJsonObject();
+      validateItemWeightPair(inputPair); // throws on error;
+      final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+      final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
+      fiSketch.update(item, weight);
+    } else {
+      fiSketch.update(data.getAsString());
+    }
+  }
+
+  /**
+   * Handles simple item and (item, weight) pairs for VarOpt updates
+   * @param voSketch The varopt sketch to receive the update
+   * @param data The JSON data, whether an raw value or object
+   */
+  private static void applyVarOptUpdate(final VarOptItemsSketch<String> voSketch, final JsonElement data) {
+    if (data.isJsonObject()) {
+      final JsonObject inputPair = data.getAsJsonObject();
+      validateItemWeightPair(inputPair); // throws on error
+      final String item = inputPair.get(QUERY_PAIR_ITEM_FIELD).getAsString();
+      final int weight = inputPair.get(QUERY_PAIR_WEIGHT_FIELD).getAsInt();
+      voSketch.update(item, weight);
+    } else {
+      voSketch.update(data.getAsString(), 1.0);
+    }
+  }
+
+  private static void validateItemWeightPair(final JsonObject inputPair) {
+    if (!inputPair.has(QUERY_PAIR_ITEM_FIELD) || !inputPair.has(QUERY_PAIR_WEIGHT_FIELD)) {
+      throw new IllegalArgumentException("Frequent Items input pairs must include both "
+          + QUERY_PAIR_ITEM_FIELD + " and " + QUERY_PAIR_WEIGHT_FIELD + " values");
+    }
+  }
 }
 

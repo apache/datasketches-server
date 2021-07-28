@@ -69,7 +69,7 @@ public class SketchStorageTest {
     final SketchStorage storage = new SketchStorage(serverConfig.getSketchList());
     final JsonObject sketches = storage.listSketches();
     assertTrue(sketches.has(RESPONSE_SKETCH_COUNT_FIELD));
-    assertEquals(sketches.get(RESPONSE_SKETCH_COUNT_FIELD).getAsInt(), 15);
-    assertTrue(storage.contains("cpcOfNumbers"));
+    assertEquals(sketches.get(RESPONSE_SKETCH_COUNT_FIELD).getAsInt(), 20);
+    assertTrue(storage.contains("cpcOfFloats"));
   }
 }

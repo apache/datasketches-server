@@ -27,10 +27,11 @@ import java.io.Reader;
 import java.net.URLDecoder;
 
 import org.apache.datasketches.Family;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -59,7 +60,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * Basic query handler. Assumes calls must include a JSON query.
    * @param sketches The sketches database to use
    */
-  BaseSketchesQueryHandler(final SketchStorage sketches) {
+  BaseSketchesQueryHandler(@NonNull final SketchStorage sketches) {
     this(sketches, false);
   }
 
@@ -68,10 +69,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
    * @param sketches The sketches database to use
    * @param queryExempt <tt>true</tt> if a query is not required, otherwise <tt>false</tt>
    */
-  BaseSketchesQueryHandler(final SketchStorage sketches, final boolean queryExempt) {
-    if (sketches == null) {
-      throw new IllegalArgumentException("Cannot initialize handler with SketchStorage == null");
-    }
+  BaseSketchesQueryHandler(@NonNull final SketchStorage sketches, final boolean queryExempt) {
     this.sketches = sketches;
     this.queryExempt = queryExempt;
   }
@@ -89,7 +87,7 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
       response.setContentType("text/html");
       query = JsonParser.parseString(URLDecoder.decode(request.getQueryString(), "utf-8"));
     } else {
-      response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+      response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405);
       baseRequest.setHandled(true);
     }
 
@@ -134,27 +132,27 @@ public abstract class BaseSketchesQueryHandler extends AbstractHandler {
           }
         }
       } else {
-        //result = callProcessQuery((JsonObject) query);
         result = processQuery((JsonObject) query);
       }
 
       if (result != null) {
-        //response.getWriter().print(result.toString());
-        response.getWriter().print(new GsonBuilder().setPrettyPrinting().create().toJson(result));
+        response.getWriter().print(result);
+        //response.getWriter().print(new GsonBuilder().setPrettyPrinting().create().toJson(result));
       }
 
       // we're ok if we reach here without an exception
-      response.setStatus(HttpServletResponse.SC_OK);
+      response.setStatus(HttpStatus.OK_200);
     } catch (final Exception e) {
       final JsonObject error = new JsonObject();
       error.addProperty(ERROR_KEY, e.getMessage());
-      response.setStatus(UNPROCESSABLE_ENTITY);
+      response.getWriter().print(error);
+      response.setStatus(HttpStatus.UNPROCESSABLE_ENTITY_422);
     }
 
     baseRequest.setHandled(true);
   }
 
-  static Family familyFromString(final String type) throws IllegalArgumentException {
+  static Family familyFromString(@NonNull final String type) throws IllegalArgumentException {
     switch (type.toLowerCase()) {
       case SKETCH_FAMILY_THETA:
         return Family.QUICKSELECT;

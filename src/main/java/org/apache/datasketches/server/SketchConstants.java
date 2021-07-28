@@ -107,8 +107,5 @@ public final class SketchConstants {
   // server configuration
   public static final int DEFAULT_PORT = 8080;
 
-  // response codes
-  public static final int UNPROCESSABLE_ENTITY = 422; // defined, but not in HttpServletResponse.SC_* codes
-
   public static final String ERROR_KEY = "error";
 }

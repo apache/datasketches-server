@@ -153,13 +153,16 @@ public class SketchStorage {
     sketchMap = new HashMap<>(list.size());
 
     for (final SketchServerConfig.SketchInfo info : list) {
+      if (info.name == null) {
+        throw new IllegalArgumentException("Mussing sketch name:" + info);
+      }
       if (sketchMap.containsKey(info.name)) {
         throw new IllegalArgumentException("Duplicate sketch key: " + info.name);
       }
 
       SketchEntry sketchEntry = null;
       final Family family = BaseSketchesQueryHandler.familyFromString(info.family);
-      final int k = info.k; // to reduce derferences in code later
+      final int k = info.k; // to reduce dereferences in code later
 
       switch (family) {
         case QUICKSELECT:

@@ -165,5 +165,6 @@ public class SketchServer {
 
     final SketchServer sketchServer = new SketchServer(args[0]);
     sketchServer.start();
+    sketchServer.server.join();
   }
 }

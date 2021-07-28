@@ -19,10 +19,11 @@
 
 package org.apache.datasketches.server;
 
+import static org.apache.datasketches.server.SketchConstants.ERROR_KEY;
 import static org.testng.Assert.fail;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -31,9 +32,12 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.eclipse.jetty.http.HttpStatus;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -51,6 +55,7 @@ public class ServerTestBase {
       server_.start();
       serverUri_ = server_.getURI();
     } catch (final Exception e) {
+      System.err.println(e.getMessage());
       fail();
     }
   }
@@ -66,11 +71,18 @@ public class ServerTestBase {
     }
   }
 
+  static void clearResponse(@NonNull final JsonObject response) {
+    for (final Map.Entry<String, JsonElement> entry : response.entrySet()) {
+      response.remove(entry.getKey());
+    }
+  }
+
   int postData(@NonNull final String path,
                @NonNull final JsonObject data,
                @NonNull final JsonObject response) {
     HttpURLConnection http = null;
     int status = -1;
+    clearResponse(response);
 
     try {
       // set up the POST
@@ -91,14 +103,19 @@ public class ServerTestBase {
       }
 
       status = http.getResponseCode();
-      if (status == HttpServletResponse.SC_OK) {
+      if (status == HttpStatus.OK_200) {
         // read response, if any, and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
           response.add(RESPONSE_FIELD, JsonParser.parseReader(isr));
         }
+      } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
+        // read error response and put into a JSON element
+        try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
+          response.add(ERROR_KEY, JsonParser.parseReader(isr));
+        }
       }
     } catch (final IOException e) {
-      fail();
+        fail();
     } finally {
       if (http != null)
         http.disconnect();
@@ -112,9 +129,10 @@ public class ServerTestBase {
               @NonNull final JsonObject response) {
     HttpURLConnection http = null;
     int status = -1;
+    clearResponse(response);
 
     try {
-      // set up the POST
+      // set up the GET
       final URL url = new URL(serverUri_ + path + "?" + data);
       http = (HttpURLConnection) url.openConnection();
       http.setDoInput(true);
@@ -122,10 +140,15 @@ public class ServerTestBase {
       http.connect();
 
       status = http.getResponseCode();
-      if (status == HttpServletResponse.SC_OK) {
+      if (status == HttpStatus.OK_200) {
         // read response, if any, and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
           response.add(RESPONSE_FIELD, JsonParser.parseReader(isr));
+        }
+      } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
+        // read error response and put into a JSON element
+        try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
+          response.add(ERROR_KEY, JsonParser.parseReader(isr));
         }
       }
     } catch (final IOException e) {
