@@ -103,15 +103,23 @@ public class ServerTestBase {
       }
 
       status = http.getResponseCode();
+
+      final JsonElement responseData;
       if (status == HttpStatus.OK_200) {
         // read response, if any, and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
-          response.add(RESPONSE_FIELD, JsonParser.parseReader(isr));
+          responseData = JsonParser.parseReader(isr);
+        }
+        if (!responseData.isJsonNull()) {
+          response.add(RESPONSE_FIELD, responseData);
         }
       } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
         // read error response and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
-          response.add(ERROR_KEY, JsonParser.parseReader(isr));
+          responseData = JsonParser.parseReader(isr);
+        }
+        if (!responseData.isJsonNull()) {
+          response.add(ERROR_KEY, responseData);
         }
       }
     } catch (final IOException e) {
@@ -140,15 +148,23 @@ public class ServerTestBase {
       http.connect();
 
       status = http.getResponseCode();
+
+      final JsonElement responseData;
       if (status == HttpStatus.OK_200) {
         // read response, if any, and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
-          response.add(RESPONSE_FIELD, JsonParser.parseReader(isr));
+          responseData = JsonParser.parseReader(isr);
+        }
+        if (!responseData.isJsonNull()) {
+          response.add(RESPONSE_FIELD, responseData);
         }
       } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
         // read error response and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
-          response.add(ERROR_KEY, JsonParser.parseReader(isr));
+          responseData = JsonParser.parseReader(isr);
+        }
+        if (!responseData.isJsonNull()) {
+          response.add(ERROR_KEY, responseData);
         }
       }
     } catch (final IOException e) {

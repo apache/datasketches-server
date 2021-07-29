@@ -32,8 +32,6 @@ import org.apache.datasketches.theta.Union;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import sun.security.acl.AclEntryImpl;
-
 
 import static org.apache.datasketches.server.SketchConstants.*;
 
@@ -73,6 +71,10 @@ public class UpdateHandler extends BaseSketchesQueryHandler {
 
   @Override
   protected JsonObject processQuery(final JsonObject query) {
+    if (query.size() == 0) {
+      throw new IllegalArgumentException("Call to update with no data");
+    }
+
     for (final Map.Entry<String, JsonElement> entry : query.entrySet()) {
       final String name = entry.getKey();
       final SketchStorage.SketchEntry se = sketches.getSketch(name);
