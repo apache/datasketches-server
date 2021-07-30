@@ -19,6 +19,7 @@
 
 package org.apache.datasketches.server;
 
+import static org.apache.datasketches.server.SketchConstants.QUERY_NAME_FIELD;
 import static org.apache.datasketches.server.SketchConstants.RESET_PATH;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -51,12 +52,12 @@ public class ResetHandlerTest extends ServerTestBase {
 
     // valid name, empty value
     request = new JsonObject();
-    request.add("name", new JsonObject());
+    request.add(QUERY_NAME_FIELD, new JsonObject());
     assertEquals(postData(RESET_PATH, request, response), HttpStatus.UNPROCESSABLE_ENTITY_422);
 
     // valid name, invalid sketch name
     request = new JsonObject();
-    request.addProperty("name", "sketchDoesNotExist");
+    request.addProperty(QUERY_NAME_FIELD, "sketchDoesNotExist");
     assertEquals(postData(RESET_PATH, request, response), HttpStatus.UNPROCESSABLE_ENTITY_422);
   }
 
@@ -72,7 +73,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertFalse(sk.isEmpty());
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -95,7 +96,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertFalse(sk.isEmpty());
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -117,7 +118,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertFalse(sk.isEmpty());
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -138,7 +139,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertFalse(sk.isEmpty());
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -159,7 +160,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertFalse(sk.getResult().isEmpty());
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -181,7 +182,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertTrue(sk.getNumSamples() > 0);
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 
@@ -203,7 +204,7 @@ public class ResetHandlerTest extends ServerTestBase {
     assertTrue(sk.getNumSamples() > 0);
 
     // reset, then check sketch is again empty
-    request.addProperty("name", sketchName);
+    request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
     assertEquals(response.size(), 0);
 

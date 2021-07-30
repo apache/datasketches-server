@@ -81,12 +81,12 @@ public class ServerTestBase {
    * Sends a POST to the server at the target path, using the provided data. Returns the HTTP status code
    * as well as any response in the response object (after clearing out anything that already existed).
    * @param path Request path appended to the server URI
-   * @param data Request data as a JsonObject
+   * @param data Request data as a JsonElement
    * @param response Response data as a JsonObject -- existing data will be removed
    * @return The HTTP status code from the server
    */
   int postData(@NonNull final String path,
-               @NonNull final JsonObject data,
+               @NonNull final JsonElement data,
                @NonNull final JsonObject response) {
     HttpURLConnection http = null;
     int status = -1;
@@ -147,13 +147,13 @@ public class ServerTestBase {
    * <p>Unlike POST, this call may be subject to HTTP header length limits since the data is encoded as
    * the request querystrong.</p>
    * @param path Request path appended to the server URI
-   * @param data Request data as a JsonObject
+   * @param data Request data as a JsonElement
    * @param response Response data as a JsonObject -- existing data will be removed
    * @return The HTTP status code from the server
    */
 
   int getData(@NonNull final String path,
-              @NonNull final JsonObject data,
+              @NonNull final JsonElement data,
               @NonNull final JsonObject response) {
     HttpURLConnection http = null;
     int status = -1;
