@@ -36,7 +36,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.testng.annotations.Test;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 

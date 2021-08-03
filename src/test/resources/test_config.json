@@ -63,7 +63,7 @@
 		},
 		{
 			"name": "topItems",
-			"k": "128",
+			"k": "8",
 			"family": "frequency"
 		},
 		{

@@ -42,11 +42,9 @@ public final class SketchConstants {
   public static final String QUERY_ERRORTYPE_FIELD = "errorType";
   public static final String QUERY_ERRORTYPE_NO_FP = "noFalsePositives";
   public static final String QUERY_ERRORTYPE_NO_FN = "noFalseNegatives";
-  public static final String QUERY_VALUES_FIELD_NAME = "values";
+  public static final String QUERY_PMF_VALUES_FIELD_NAME = "pmfValues";
+  public static final String QUERY_CDF_VALUES_FIELD_NAME = "cdfValues";
   public static final String QUERY_FRACTIONS_NAME_FIELD = "fractions";
-  public static final String QUERY_RESULT_TYPE_NAME_FIELD = "resultType";
-  public static final String QUERY_RESULT_TYPE_PMF = "pmf";
-  public static final String QUERY_RESULT_TYPE_CDF = "cdf";
 
   // JSON Query Response Field Names
   public static final String RESPONSE_SUMMARY_FIELD = QUERY_SUMMARY_FIELD;

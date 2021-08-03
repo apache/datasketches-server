@@ -196,8 +196,7 @@ A sample query may be found in [query.json][example/query.json]:
     "errorType": "noFalsePositives"
   },
   { "name": "duration",
-    "resultType": "cdf",
-    "values": [500, 800, 1000],
+    "cdfValues": [500, 800, 1000],
     "fractions": [0.2, 0.5, 0.8]
   },
   { "name": "cpcOfNumbers",
@@ -212,9 +211,8 @@ primarily for debugging. The other properties supported in a query are specitic 
 * theta, cpc, hll
   * No additional fields; returns all estimates
 * kll
-  * `resultType`: indicates `pmf` or `cdf` for rank results with a `values` query. A single
-    query may include only one.
-  * `values`: specifies split points in value space when querying ranks (as pmf or cdf)
+  * `cdfValues`: specifies split points in value space when querying ranks in a CDF
+  * `pmfValues`: specifies split points in value space when querying masses in a PMF
   * `fractions`: specifies split points in rank space when querying values from the sketch   
 * frequency
   * `errorType`: specifies `noFalsePositives` or `noFalseNegatives`
