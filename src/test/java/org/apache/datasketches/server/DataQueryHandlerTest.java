@@ -28,7 +28,6 @@ import static org.apache.datasketches.server.SketchConstants.QUERY_NAME_FIELD;
 import static org.apache.datasketches.server.SketchConstants.QUERY_PATH;
 import static org.apache.datasketches.server.SketchConstants.QUERY_PMF_VALUES_FIELD_NAME;
 import static org.apache.datasketches.server.SketchConstants.QUERY_SUMMARY_FIELD;
-import static org.apache.datasketches.server.SketchConstants.RESET_PATH;
 import static org.apache.datasketches.server.SketchConstants.RESPONSE_CDF_LIST;
 import static org.apache.datasketches.server.SketchConstants.RESPONSE_ESTIMATE_FIELD;
 import static org.apache.datasketches.server.SketchConstants.RESPONSE_ESTIMATION_MODE_FIELD;

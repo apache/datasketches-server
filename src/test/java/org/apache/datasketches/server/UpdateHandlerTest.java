@@ -74,7 +74,7 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     data = new JsonArray();
@@ -82,13 +82,13 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // single-item update
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CpcSketch sk = (CpcSketch) entry.sketch_;
@@ -109,12 +109,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i); // not converting to String since should happen upon parsing
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CpcSketch sk = (CpcSketch) entry.sketch_;
@@ -136,12 +136,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i * 10.0);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CpcSketch sk = (CpcSketch) entry.sketch_;
@@ -160,7 +160,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     JsonObject request = new JsonObject();
     request.addProperty(sketchName, "item1");
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // item with weight
     request = new JsonObject();
@@ -169,7 +169,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     data.addProperty(QUERY_PAIR_WEIGHT_FIELD, 5);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // array of items with and without weights
     request = new JsonObject();
@@ -181,7 +181,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     dataArray.add(data);
     request.add(sketchName, dataArray);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final org.apache.datasketches.frequencies.ItemsSketch<String> sk = (org.apache.datasketches.frequencies.ItemsSketch<String>) entry.sketch_;
@@ -216,12 +216,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i); // not converting to String since should happen upon parsing
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final HllSketch sk = (HllSketch) entry.sketch_;
@@ -242,7 +242,7 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     data = new JsonArray();
@@ -250,13 +250,13 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // single-item update
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final HllSketch sk = (HllSketch) entry.sketch_;
@@ -277,12 +277,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i * 10.0);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final HllSketch sk = (HllSketch) entry.sketch_;
@@ -306,13 +306,13 @@ public class UpdateHandlerTest extends ServerTestBase {
         data.add(i * 10.0);
       request.add(sketchName, data);
       assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-      assertEquals(response.size(), 0);
+      assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
       // single update
       request = new JsonObject();
       request.add(sketchName, new JsonPrimitive(-1));
       assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-      assertEquals(response.size(), 0);
+      assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
     }
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
@@ -332,7 +332,7 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     data = new JsonArray();
@@ -340,13 +340,13 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i);
     request.add(sketchName, data);
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // single-item update
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CompactSketch sk = ((Union) entry.sketch_).getResult();
@@ -367,12 +367,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i); // not converting to String since should happen upon parsing
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CompactSketch sk = ((Union) entry.sketch_).getResult();
@@ -393,12 +393,12 @@ public class UpdateHandlerTest extends ServerTestBase {
       data.add(i * 10.0);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     request = new JsonObject();
     request.add(sketchName, new JsonPrimitive(-1));
     assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final CompactSketch sk = ((Union) entry.sketch_).getResult();
@@ -423,13 +423,13 @@ public class UpdateHandlerTest extends ServerTestBase {
         data.add(Integer.toString(i));
       request.add(sketchName, data);
       assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-      assertEquals(response.size(), 0);
+      assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
       // single update
       request = new JsonObject();
       request.add(sketchName, new JsonPrimitive("-1"));
       assertEquals(getData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-      assertEquals(response.size(), 0);
+      assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
     }
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
@@ -447,7 +447,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     JsonObject request = new JsonObject();
     request.addProperty(sketchName, "item1");
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // item with weight
     request = new JsonObject();
@@ -456,7 +456,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     data.addProperty(QUERY_PAIR_WEIGHT_FIELD, 5);
     request.add(sketchName, data);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // array of items with and without weights
     request = new JsonObject();
@@ -468,7 +468,7 @@ public class UpdateHandlerTest extends ServerTestBase {
     dataArray.add(data);
     request.add(sketchName, dataArray);
     assertEquals(postData(UPDATE_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     final SketchStorage.SketchEntry entry = server_.getSketch(sketchName);
     final VarOptItemsSketch<String> sk = (VarOptItemsSketch<String>) entry.sketch_;

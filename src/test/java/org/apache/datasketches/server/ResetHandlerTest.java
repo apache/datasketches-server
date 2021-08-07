@@ -75,7 +75,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (CpcSketch) server_.getSketch(sketchName).sketch_;
@@ -98,7 +98,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (ItemsSketch<String>) server_.getSketch(sketchName).sketch_;
@@ -120,7 +120,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (HllSketch) server_.getSketch(sketchName).sketch_;
@@ -141,7 +141,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (KllFloatsSketch) server_.getSketch(sketchName).sketch_;
@@ -162,7 +162,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (Union) server_.getSketch(sketchName).sketch_;
@@ -184,7 +184,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (ReservoirItemsSketch<String>) server_.getSketch(sketchName).sketch_;
@@ -206,7 +206,7 @@ public class ResetHandlerTest extends ServerTestBase {
     // reset, then check sketch is again empty
     request.addProperty(QUERY_NAME_FIELD, sketchName);
     assertEquals(getData(RESET_PATH, request, response), HttpStatus.OK_200);
-    assertEquals(response.size(), 0);
+    assertTrue(response.get(RESPONSE_FIELD).isJsonNull());
 
     // get sketch again before testing
     sk = (VarOptItemsSketch<String>) server_.getSketch(sketchName).sketch_;

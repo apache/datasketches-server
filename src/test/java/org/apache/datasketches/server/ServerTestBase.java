@@ -118,17 +118,13 @@ public class ServerTestBase {
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
           responseData = JsonParser.parseReader(isr);
         }
-        if (!responseData.isJsonNull()) {
-          response.add(RESPONSE_FIELD, responseData);
-        }
+        response.add(RESPONSE_FIELD, responseData);
       } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
         // read error response and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
           responseData = JsonParser.parseReader(isr);
         }
-        if (!responseData.isJsonNull()) {
-          response.add(ERROR_KEY, responseData);
-        }
+        response.add(ERROR_KEY, responseData);
       }
     } catch (final IOException e) {
         fail();
@@ -175,17 +171,13 @@ public class ServerTestBase {
         try (final InputStreamReader isr = new InputStreamReader(http.getInputStream())) {
           responseData = JsonParser.parseReader(isr);
         }
-        if (!responseData.isJsonNull()) {
-          response.add(RESPONSE_FIELD, responseData);
-        }
+        response.add(RESPONSE_FIELD, responseData);
       } else if (status == HttpStatus.UNPROCESSABLE_ENTITY_422) {
         // read error response and put into a JSON element
         try (final InputStreamReader isr = new InputStreamReader(http.getErrorStream())) {
           responseData = JsonParser.parseReader(isr);
         }
-        if (!responseData.isJsonNull()) {
-          response.add(ERROR_KEY, responseData);
-        }
+        response.add(ERROR_KEY, responseData);
       }
     } catch (final IOException e) {
       fail();

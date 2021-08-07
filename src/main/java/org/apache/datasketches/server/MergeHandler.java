@@ -19,6 +19,13 @@
 
 package org.apache.datasketches.server;
 
+import static org.apache.datasketches.server.SketchConstants.QUERY_DATA_FIELD;
+import static org.apache.datasketches.server.SketchConstants.QUERY_FAMILY_FIELD;
+import static org.apache.datasketches.server.SketchConstants.QUERY_MERGE_K_FIELD;
+import static org.apache.datasketches.server.SketchConstants.QUERY_MERGE_SRC_FIELD;
+import static org.apache.datasketches.server.SketchConstants.QUERY_MERGE_TGT_FIELD;
+import static org.apache.datasketches.server.SketchConstants.QUERY_SKETCH_FIELD;
+
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
@@ -83,7 +90,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
     // optional targets:
     // If no QUERY_MERGE_TGT_FIELD serialize the result, but then need specify QUERY_MERGE_K_FIELD.
     // If a valid target is present, any value of QUERY_MERGE_K_FIELD is ignored
-    final JsonElement dstElement = query.get(SketchConstants.QUERY_MERGE_TGT_FIELD);
+    final JsonElement dstElement = query.get(QUERY_MERGE_TGT_FIELD);
     final String dst = dstElement != null ? dstElement.getAsString() : null;
     if (dst != null && !sketches.contains(dst)) {
       throw new IllegalArgumentException("Specified target sketch does not exist: " + dst);
@@ -91,15 +98,15 @@ public class MergeHandler extends BaseSketchesQueryHandler {
 
     int k = 0;
     if (dst == null) {
-      final JsonElement kElement = query.get(SketchConstants.QUERY_MERGE_K_FIELD);
-      if (kElement == null) {
-        throw new IllegalArgumentException("Must specify either \"" + SketchConstants.QUERY_MERGE_TGT_FIELD
-            + "\" or \"" + SketchConstants.QUERY_MERGE_K_FIELD + "\". Neither found.");
+      final JsonElement kElement = query.get(QUERY_MERGE_K_FIELD);
+      if (kElement == null || !kElement.isJsonPrimitive() || !kElement.getAsJsonPrimitive().isNumber()) {
+        throw new IllegalArgumentException("Must specify either \"" + QUERY_MERGE_TGT_FIELD
+            + "\" or a numeric value for \"" + QUERY_MERGE_K_FIELD + "\". Neither found.");
       }
       k = kElement.getAsInt();
     }
 
-    final JsonElement srcElement = query.get(SketchConstants.QUERY_MERGE_SRC_FIELD);
+    final JsonElement srcElement = query.get(QUERY_MERGE_SRC_FIELD);
     if (srcElement == null || !srcElement.isJsonArray()) {
       throw new IllegalArgumentException("Merge source data must be a JSON Array");
     }
@@ -110,6 +117,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
     if (dst != null) {
       se = sketches.getSketch(dst);
       dstFamily = se.family_;
+      k = se.configK_;
     }
 
     // we'll process (and dedup) any stored sketches before we handle encoded inputs
@@ -130,7 +138,7 @@ public class MergeHandler extends BaseSketchesQueryHandler {
     // skBytes == null if merging into another sketch; only non-null if returning a serialized image
     if (skBytes != null) {
       final JsonObject result = new JsonObject();
-      result.addProperty(SketchConstants.QUERY_SKETCH_FIELD, Base64.getUrlEncoder().encodeToString(skBytes));
+      result.addProperty(QUERY_SKETCH_FIELD, Base64.getUrlEncoder().encodeToString(skBytes));
       return result;
     } else {
       return null;
@@ -174,14 +182,14 @@ public class MergeHandler extends BaseSketchesQueryHandler {
       } else { // is JsonObject
         // need special handling for theta as we store Unions?
         final JsonObject sourceObj = elmt.getAsJsonObject();
-        if (!sourceObj.has(SketchConstants.QUERY_FAMILY_FIELD)
-            || !sourceObj.has(SketchConstants.QUERY_DATA_FIELD)) {
+        if (!sourceObj.has(QUERY_FAMILY_FIELD)
+            || !sourceObj.has(QUERY_DATA_FIELD)) {
           throw new SketchesException("Base64 sketch used as merge input must specify both \""
-              + SketchConstants.QUERY_FAMILY_FIELD + "\" and \"" + SketchConstants.QUERY_DATA_FIELD + "\"");
+              + QUERY_FAMILY_FIELD + "\" and \"" + QUERY_DATA_FIELD + "\"");
         }
 
-        final Family skFamily = familyFromString(sourceObj.get(SketchConstants.QUERY_FAMILY_FIELD).getAsString());
-        final String skString = sourceObj.get(SketchConstants.QUERY_DATA_FIELD).getAsString();
+        final Family skFamily = familyFromString(sourceObj.get(QUERY_FAMILY_FIELD).getAsString());
+        final String skString = sourceObj.get(QUERY_DATA_FIELD).getAsString();
         if (skString == null || (family != null
             && ((family != Family.UNION && family != skFamily) || (family == Family.UNION && skFamily != Family.QUICKSELECT)))) {
           throw new SketchesException("Input sketches must exist and be of the same family as the target");
@@ -266,8 +274,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
         if (dstEntry != null) {
           union.update((HllSketch) dstEntry.sketch_);
         }
-        for (final Object obj : sketchList) {
-          union.update((HllSketch) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.update((HllSketch) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
@@ -283,8 +293,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
         if (dstEntry != null) {
           union.update((CpcSketch) dstEntry.sketch_);
         }
-        for (final Object obj : sketchList) {
-          union.update((CpcSketch) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.update((CpcSketch) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
@@ -299,8 +311,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
         // Only merge(), no separate union. Slightly abusing terminology to call it union
         final KllFloatsSketch union = dstEntry == null ? new KllFloatsSketch(k) : (KllFloatsSketch) dstEntry.sketch_;
 
-        for (final Object obj : sketchList) {
-          union.merge((KllFloatsSketch) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.merge((KllFloatsSketch) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
@@ -315,8 +329,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
         // Only merge(), no separate union. Slightly abusing terminology to call it union
         final ItemsSketch<String> union = dstEntry == null ? new ItemsSketch<>(k) : (ItemsSketch<String>) dstEntry.sketch_;
 
-        for (final Object obj : sketchList) {
-          union.merge((ItemsSketch<String>) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.merge((ItemsSketch<String>) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
@@ -333,8 +349,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
           union.update((ReservoirItemsSketch<String>) dstEntry.sketch_);
         }
 
-        for (final Object obj : sketchList) {
-          union.update((ReservoirItemsSketch<String>) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.update((ReservoirItemsSketch<String>) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
@@ -351,8 +369,10 @@ public class MergeHandler extends BaseSketchesQueryHandler {
           union.update((VarOptItemsSketch<String>) dstEntry.sketch_);
         }
 
-        for (final Object obj : sketchList) {
-          union.update((VarOptItemsSketch<String>) obj);
+        for (final MergeEntry me : sketchList) {
+          synchronized (me.name_.intern()) {
+            union.update((VarOptItemsSketch<String>) me.sketch_);
+          }
         }
 
         if (dstEntry == null) {
